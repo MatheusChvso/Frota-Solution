@@ -31,6 +31,57 @@ router.post('/', async (req, res) => {
   }
 });
 
+
+
+// ROTA DELETE: Deletar um veículo por ID
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const sql = 'DELETE FROM veiculos WHERE id = ?';
+    const [result] = await db.query(sql, [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Veículo não encontrado.' });
+    }
+
+    res.json({ message: 'Veículo deletado com sucesso!' });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao deletar veículo: ' + error.message });
+  }
+});
+
+
+
+// ROTA PUT: Atualizar um veículo por ID
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  // Pega todos os dados do corpo da requisição
+  const { placa, marca, modelo, ano, km_atual, limite_km_mensal, status } = req.body;
+
+  // Validação simples
+  if (!placa || !marca || !modelo || !ano || !status) {
+    return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
+  }
+
+  try {
+    const sql = `
+      UPDATE veiculos 
+      SET placa = ?, marca = ?, modelo = ?, ano = ?, km_atual = ?, limite_km_mensal = ?, status = ?
+      WHERE id = ?
+    `;
+    const [result] = await db.query(sql, [placa, marca, modelo, ano, km_atual, limite_km_mensal, status, id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Veículo não encontrado.' });
+    }
+
+    res.json({ message: 'Veículo atualizado com sucesso!' });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao atualizar veículo: ' + error.message });
+  }
+});
+
 // ** (No futuro, adicionaremos aqui as rotas de GET por ID, PUT e DELETE) **
 
 module.exports = router;
