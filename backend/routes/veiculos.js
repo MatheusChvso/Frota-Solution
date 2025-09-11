@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
 // ROTA POST: Criar um novo veículo
 router.post('/', async (req, res) => {
   // Pega os dados do corpo da requisição
-  const { placa, marca, modelo, ano, km_atual, limite_km_mensal, status } = req.body;
+  const { placa, marca, modelo, ano, km_atual, limite_km_mensal, status = 'disponivel' } = req.body;
 
   if (!placa || !marca || !modelo || !ano) {
     return res.status(400).json({ error: 'Placa, marca, modelo e ano são obrigatórios.' });
