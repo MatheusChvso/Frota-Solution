@@ -1,31 +1,61 @@
 // frontend/src/App.jsx
-
-import React from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { Routes, Route, Link, Navigate } from 'react-router-dom';
+import { AuthProvider, AuthContext } from './context/AuthContext';
 import PaginaVeiculos from './components/PaginaVeiculos';
 import PaginaVendedores from './components/PaginaVendedores';
-import PaginaAlocacoes from './components/PaginaAlocacoes'; // <-- 1. IMPORTE A NOVA PÁGINA
+import PaginaAlocacoes from './components/PaginaAlocacoes';
+import PaginaLogin from './components/PaginaLogin';
+import RotaProtegida from './components/RotaProtegida';
 import './App.css';
 
-function App() {
+// Componente de Layout principal que inclui a navegação
+const MainLayout = () => {
+  const { user, logout } = useContext(AuthContext);
+
   return (
     <div>
-      <nav style={{ padding: '10px', background: '#eee', marginBottom: '20px', fontSize: '1.1em' }}>
-        <Link to="/veiculos" style={{ marginRight: '15px' }}>Gerenciar Veículos</Link>
-        <Link to="/vendedores" style={{ marginRight: '15px' }}>Gerenciar Vendedores</Link>
-        <Link to="/alocacoes" style={{ marginRight: '15px' }}>Alocações</Link> {/* <-- 2. ADICIONE O NOVO LINK */}
+      <nav style={{ padding: '10px', background: '#eee', marginBottom: '20px', fontSize: '1.1em', display: 'flex', justifyContent: 'space-between' }}>
+        <div>
+          <Link to="/veiculos" style={{ marginRight: '15px' }}>Veículos</Link>
+          <Link to="/vendedores" style={{ marginRight: '15px' }}>Vendedores</Link>
+          <Link to="/alocacoes" style={{ marginRight: '15px' }}>Alocações</Link>
+        </div>
+        <div>
+          <span>Olá, {user?.nome}</span>
+          <button onClick={logout} style={{ marginLeft: '15px' }}>Sair</button>
+        </div>
       </nav>
-
       <div style={{ padding: '0 20px' }}>
         <Routes>
-          <Route path="/" element={<PaginaVeiculos />} />
           <Route path="/veiculos" element={<PaginaVeiculos />} />
           <Route path="/vendedores" element={<PaginaVendedores />} />
-          <Route path="/alocacoes" element={<PaginaAlocacoes />} /> {/* <-- 3. ADICIONE A NOVA ROTA */}
+          <Route path="/alocacoes" element={<PaginaAlocacoes />} />
+          {/* Rota padrão dentro do layout protegido */}
+          <Route path="*" element={<Navigate to="/veiculos" />} />
         </Routes>
       </div>
     </div>
   );
-}
+};
 
+function App() {
+  return (
+    <AuthProvider>
+      <Routes>
+        <Route path="/login" element={<PaginaLogin />} />
+
+
+        <Route 
+          path="/*" // Qualquer outra rota...
+          element={
+            <RotaProtegida> {/* ...será protegida... */}
+              <MainLayout /> {/* ...e renderizará o layout principal */}
+            </RotaProtegida>
+          } 
+        />
+      </Routes>
+    </AuthProvider>
+  );
+}
 export default App;

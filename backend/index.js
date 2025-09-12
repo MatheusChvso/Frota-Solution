@@ -9,7 +9,7 @@ const PORT = 3001; // Porta para o backend rodar, diferente da porta do React
 const veiculosRoutes = require('./routes/veiculos'); // <-- ADICIONE ESTA LINHA
 const vendedoresRoutes = require('./routes/vendedores');
 const alocacoesRoutes = require('./routes/alocacoes');
-
+const leiturasKmRoutes = require('./routes/leiturasKm');
 // Middlewares
 app.use(cors()); // Permite que o frontend acesse a API
 app.use(express.json()); // Permite que o servidor entenda JSON
@@ -50,6 +50,7 @@ app.get('/', (req, res) => {
 app.use('/api/veiculos', veiculosRoutes);
 app.use('/api/vendedores', vendedoresRoutes);
 app.use('/api/alocacoes', alocacoesRoutes);
+app.use('/api/leituras-km', leiturasKmRoutes);
 // Inicia o servidor
 
 app.listen(PORT, () => {
