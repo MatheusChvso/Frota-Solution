@@ -56,21 +56,22 @@ router.delete('/:id', async (req, res) => {
 // ROTA PUT: Atualizar um veículo por ID
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  // Pega todos os dados do corpo da requisição
-  const { placa, marca, modelo, ano, km_atual, limite_km_mensal, status } = req.body;
+  // 1. ADICIONE 'limite_km_contrato' AQUI PARA RECEBER O DADO
+  const { placa, marca, modelo, ano, km_atual, limite_km_mensal, limite_km_contrato, status } = req.body;
 
-  // Validação simples
   if (!placa || !marca || !modelo || !ano || !status) {
     return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
   }
 
   try {
+    // 2. ADICIONE O CAMPO NA QUERY SQL DE UPDATE
     const sql = `
       UPDATE veiculos 
-      SET placa = ?, marca = ?, modelo = ?, ano = ?, km_atual = ?, limite_km_mensal = ?, status = ?
+      SET placa = ?, marca = ?, modelo = ?, ano = ?, km_atual = ?, limite_km_mensal = ?, limite_km_contrato = ?, status = ?
       WHERE id = ?
     `;
-    const [result] = await db.query(sql, [placa, marca, modelo, ano, km_atual, limite_km_mensal, status, id]);
+    // 3. ADICIONE A VARIÁVEL NA LISTA DE PARÂMETROS DA QUERY
+    const [result] = await db.query(sql, [placa, marca, modelo, ano, km_atual, limite_km_mensal, limite_km_contrato, status, id]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Veículo não encontrado.' });

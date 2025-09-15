@@ -1,10 +1,46 @@
 // backend/routes/dashboard.js
 
-console.log('>>> [OK] Arquivo de rotas /routes/dashboard.js foi carregado.');
 const express = require('express');
-const router = express.Router();
+const router = express.Router(); // <--- Esta é a linha que estava faltando
 const db = require('../db');
 const { proteger } = require('../middleware/authMiddleware');
+
+// ROTA PARA BUSCAR OS DADOS GERAIS DO DASHBOARD (POR VEÍCULO)
+router.get('/visao-geral', proteger, async (req, res) => {
+  try {
+    const sql = `
+      SELECT 
+        v.id,
+        v.modelo,
+        v.placa,
+        v.limite_km_contrato,
+        (SELECT MIN(lk.km_atual) FROM leituras_km lk JOIN alocacoes a ON lk.id_alocacao = a.id WHERE a.id_veiculo = v.id) as km_inicial,
+        v.km_atual as km_final
+      FROM veiculos v
+      WHERE v.limite_km_contrato IS NOT NULL AND v.limite_km_contrato > 0
+    `;
+    const [veiculos] = await db.query(sql);
+
+    const relatorioContrato = veiculos.map(v => {
+      const kmInicialReal = v.km_inicial === null ? v.km_final : v.km_inicial;
+      const kmRodadosTotal = v.km_final > kmInicialReal ? v.km_final - kmInicialReal : 0;
+      const percentualUso = v.limite_km_contrato > 0 ? Math.round((kmRodadosTotal / v.limite_km_contrato) * 100) : 0;
+
+      return {
+        id: v.id,
+        modelo: v.modelo,
+        placa: v.placa,
+        limiteContrato: v.limite_km_contrato,
+        kmTotalRodado: kmRodadosTotal,
+        percentualUso: percentualUso
+      };
+    });
+
+    res.json(relatorioContrato);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar dados do dashboard: ' + error.message });
+  }
+});
 
 // Rota para buscar os dados do Mural da Vergonha
 router.get('/mural-da-vergonha', proteger, async (req, res) => {
@@ -23,11 +59,9 @@ router.get('/mural-da-vergonha', proteger, async (req, res) => {
           a.data_fim IS NULL
           AND lk.id IS NULL;
     `;
-
+    
     const [pendentes] = await db.query(sql);
-    console.log('--- Dados a serem enviados para o frontend:', pendentes, '---');
     res.json(pendentes);
-
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar dados do mural: ' + error.message });
   }

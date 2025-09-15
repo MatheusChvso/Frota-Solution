@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 // Um pequeno componente para a barra de progresso
-const ProgressBar = ({ percentage }) => {
+export const ProgressBar = ({ percentage }) => {
   let color = '#4caf50'; // Verde
   if (percentage > 70) color = '#ff9800'; // Laranja
   if (percentage > 90) color = '#f44336'; // Vermelho

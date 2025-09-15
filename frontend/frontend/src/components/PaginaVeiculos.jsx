@@ -128,6 +128,7 @@ const ListaVeiculos = () => {
               <input name="ano" type="number" value={veiculoEditando.ano} onChange={handleModalChange} />
               <input name="km_atual" type="number" value={veiculoEditando.km_atual} onChange={handleModalChange} />
               <input name="limite_km_mensal" type="number" value={veiculoEditando.limite_km_mensal} onChange={handleModalChange} />
+              <input name="limite_km_contrato" type="number" value={veiculoEditando.limite_km_contrato || ''} onChange={handleModalChange} placeholder="Limite KM do Contrato" />
               <select name="status" value={veiculoEditando.status} onChange={handleModalChange}>
                 <option value="disponivel">Disponível</option>
                 <option value="em_uso">Em Uso</option>
