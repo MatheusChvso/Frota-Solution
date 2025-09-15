@@ -24,3 +24,17 @@
   flex-direction: column;
   gap: 10px;
 }
+
+/* Adicione este bloco para corrigir o texto branco no modal */
+.modal-content input,
+.modal-content select,
+.modal-content button {
+  color: #333; /* Define uma cor de texto escura */
+  font-size: 1rem; /* Garante um tamanho de fonte legível */
+  padding: 8px; /* Melhora a aparência */
+  margin-bottom: 5px; /* Adiciona um pequeno espaço */
+}
+
+.modal-content button {
+    color: white; /* Mantém o texto do botão branco se o fundo for colorido */
+}
