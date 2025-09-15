@@ -10,6 +10,7 @@ const vendedoresRoutes = require('./routes/vendedores');
 const alocacoesRoutes = require('./routes/alocacoes');
 const leiturasKmRoutes = require('./routes/leiturasKm');
 const dashboardRoutes = require('./routes/dashboard');
+const relatoriosRoutes = require('./routes/relatorios');
 
 const app = express();
 const PORT = 3001;
@@ -25,7 +26,7 @@ app.use('/api/alocacoes', alocacoesRoutes);
 app.use('/api/leituras-km', leiturasKmRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 console.log('>>> [OK] Rotas do dashboard foram registradas no Express com o prefixo /api/dashboard.');
-
+app.use('/api/relatorios', relatoriosRoutes);
 
 // Rota principal para verificar se a API está online
 app.get('/', (req, res) => {
