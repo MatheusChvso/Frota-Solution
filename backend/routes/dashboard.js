@@ -1,7 +1,6 @@
 // backend/routes/dashboard.js
-
 const express = require('express');
-const router = express.Router(); // <--- Esta é a linha que estava faltando
+const router = express.Router();
 const db = require('../db');
 const { proteger } = require('../middleware/authMiddleware');
 
@@ -10,32 +9,23 @@ router.get('/visao-geral', proteger, async (req, res) => {
   try {
     const sql = `
       SELECT 
-        v.id,
-        v.modelo,
-        v.placa,
-        v.limite_km_contrato,
-        (SELECT MIN(lk.km_atual) FROM leituras_km lk JOIN alocacoes a ON lk.id_alocacao = a.id WHERE a.id_veiculo = v.id) as km_inicial,
-        v.km_atual as km_final
-      FROM veiculos v
-      WHERE v.limite_km_contrato IS NOT NULL AND v.limite_km_contrato > 0
+        v.id, v.modelo, v.placa, v.km_atual, v.limite_km_mensal, v.tempo_contrato_meses, v.km_inicial_contrato
+      FROM veiculos
+      WHERE v.tempo_contrato_meses IS NOT NULL AND v.km_inicial_contrato IS NOT NULL
     `;
     const [veiculos] = await db.query(sql);
 
     const relatorioContrato = veiculos.map(v => {
-      const kmInicialReal = v.km_inicial === null ? v.km_final : v.km_inicial;
-      const kmRodadosTotal = v.km_final > kmInicialReal ? v.km_final - kmInicialReal : 0;
-      const percentualUso = v.limite_km_contrato > 0 ? Math.round((kmRodadosTotal / v.limite_km_contrato) * 100) : 0;
-
+      const limiteContrato = (v.limite_km_mensal || 0) * (v.tempo_contrato_meses || 0);
+      const kmTotalRodado = v.km_atual - v.km_inicial_contrato;
+      const percentualUso = limiteContrato > 0 ? Math.round((kmTotalRodado / limiteContrato) * 100) : 0;
       return {
-        id: v.id,
-        modelo: v.modelo,
-        placa: v.placa,
-        limiteContrato: v.limite_km_contrato,
-        kmTotalRodado: kmRodadosTotal,
+        id: v.id, modelo: v.modelo, placa: v.placa,
+        limiteContrato: limiteContrato,
+        kmTotalRodado: kmTotalRodado,
         percentualUso: percentualUso
       };
     });
-
     res.json(relatorioContrato);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar dados do dashboard: ' + error.message });
@@ -46,20 +36,13 @@ router.get('/visao-geral', proteger, async (req, res) => {
 router.get('/mural-da-vergonha', proteger, async (req, res) => {
   try {
     const sql = `
-      SELECT
-          vend.nome,
-          vend.caminho_foto,
-          v.placa,
-          v.modelo
+      SELECT vend.nome, vend.caminho_foto, v.placa, v.modelo
       FROM alocacoes a
       JOIN vendedores vend ON a.id_vendedor = vend.id
       JOIN veiculos v ON a.id_veiculo = v.id
       LEFT JOIN leituras_km lk ON a.id = lk.id_alocacao AND lk.data_leitura = CURDATE()
-      WHERE
-          a.data_fim IS NULL
-          AND lk.id IS NULL;
+      WHERE a.data_fim IS NULL AND lk.id IS NULL;
     `;
-    
     const [pendentes] = await db.query(sql);
     res.json(pendentes);
   } catch (error) {

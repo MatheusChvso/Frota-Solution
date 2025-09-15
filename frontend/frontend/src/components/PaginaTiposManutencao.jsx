@@ -1,20 +1,28 @@
-// frontend/src/components/PaginaTiposManutencao.jsx
+// frontend/src/components/PaginaTiposManutencao.jsx (VERSÃO COM LOGS)
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { FaPencilAlt, FaTrash } from 'react-icons/fa'; // Mantemos os ícones para o futuro
 
 const PaginaTiposManutencao = () => {
   const [tipos, setTipos] = useState([]);
-  const [novoTipo, setNovoTipo] = useState({ nome: '', intervalo_km_padrao: '', descricao: '' });
   const [isLoading, setIsLoading] = useState(true);
+  // Mantemos os outros estados para quando a página voltar ao normal
+  const [novoTipo, setNovoTipo] = useState({ nome: '', intervalo_km_padrao: '', descricao: '' });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [tipoEditando, setTipoEditando] = useState(null);
 
   const fetchTipos = async () => {
+    console.log('1. Iniciando busca de dados no frontend...');
     try {
       const response = await axios.get('http://localhost:3001/api/manutencao/tipos');
+      console.log('2. Dados recebidos da API:', response.data);
       setTipos(response.data);
+      console.log('3. Estado "tipos" foi atualizado.');
     } catch (error) {
-      console.error("Erro ao buscar tipos de manutenção:", error);
+      console.error("!!! ERRO AO BUSCAR DADOS:", error);
     } finally {
       setIsLoading(false);
+      console.log('4. "isLoading" foi definido como false.');
     }
   };
 
@@ -22,51 +30,32 @@ const PaginaTiposManutencao = () => {
     fetchTipos();
   }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNovoTipo({ ...novoTipo, [name]: value });
-  };
+  // As outras funções (handleSubmit, etc.) não serão usadas neste teste,
+  // mas podemos deixá-las aqui por enquanto.
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post('http://localhost:3001/api/manutencao/tipos', novoTipo);
-      alert('Tipo de manutenção cadastrado com sucesso!');
-      setNovoTipo({ nome: '', intervalo_km_padrao: '', descricao: '' });
-      fetchTipos();
-    } catch (error) {
-      alert('Erro ao cadastrar tipo de manutenção.');
-      console.error(error);
-    }
-  };
-
-  if (isLoading) return <p>Carregando...</p>;
+  if (isLoading) {
+    return <p>Carregando...</p>;
+  }
 
   return (
     <div>
       <h1>Gerenciar Tipos de Manutenção</h1>
-      <p>Cadastre aqui os serviços que seus veículos precisam, como "Troca de Óleo" e o intervalo de KM para cada um.</p>
-
-      <h2>Cadastrar Novo Tipo de Manutenção</h2>
-      <form onSubmit={handleSubmit}>
-        <input name="nome" value={novoTipo.nome} onChange={handleInputChange} placeholder="Nome do Serviço (ex: Troca de Óleo)" required />
-        <input name="intervalo_km_padrao" type="number" value={novoTipo.intervalo_km_padrao} onChange={handleInputChange} placeholder="Intervalo Padrão em KM (ex: 10000)" required />
-        <textarea name="descricao" value={novoTipo.descricao} onChange={handleInputChange} placeholder="Descrição (opcional)" />
-        <button type="submit">Cadastrar Tipo</button>
-      </form>
+      {/* O formulário fica aqui, mas não vamos usá-lo no teste */}
 
       <hr style={{ margin: '20px 0' }} />
 
       <h2>Tipos de Manutenção Cadastrados</h2>
-      <table border="1" style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <table>
         <thead>
           <tr>
             <th>Nome do Serviço</th>
             <th>Intervalo Padrão</th>
             <th>Descrição</th>
+            {/* <th>Ações</th> */}
           </tr>
         </thead>
         <tbody>
+          {console.log('5. Renderizando a tabela. O valor de "tipos" é:', tipos)}
           {tipos.map(tipo => (
             <tr key={tipo.id}>
               <td>{tipo.nome}</td>

@@ -38,6 +38,7 @@ const ListaVeiculos = () => {
   };
 
   const handleDelete = async (id) => {
+    console.log(`--- Botão Excluir clicado para o veículo ID: ${id} ---`); 
     if (window.confirm('Tem certeza que deseja excluir este veículo?')) {
       try {
         await axios.delete(`http://localhost:3001/api/veiculos/${id}`);
@@ -130,7 +131,9 @@ const ListaVeiculos = () => {
               <input name="ano" type="number" value={veiculoEditando.ano} onChange={handleModalChange} />
               <input name="km_atual" type="number" value={veiculoEditando.km_atual} onChange={handleModalChange} />
               <input name="limite_km_mensal" type="number" value={veiculoEditando.limite_km_mensal} onChange={handleModalChange} />
-              <input name="limite_km_contrato" type="number" value={veiculoEditando.limite_km_contrato || ''} onChange={handleModalChange} placeholder="Limite KM do Contrato" />
+              <input name="data_inicio_contrato" type="date" value={veiculoEditando.data_inicio_contrato || ''} onChange={handleModalChange} placeholder="Data de Início do Contrato" />
+              <input name="tempo_contrato_meses" type="number" value={veiculoEditando.tempo_contrato_meses || ''} onChange={handleModalChange} placeholder="Duração do Contrato (meses)" />
+              <input name="km_inicial_contrato" type="number" value={veiculoEditando.km_inicial_contrato || ''} onChange={handleModalChange} placeholder="KM Inicial do Contrato" />
               <select name="status" value={veiculoEditando.status} onChange={handleModalChange}>
                 <option value="disponivel">Disponível</option>
                 <option value="em_uso">Em Uso</option>
