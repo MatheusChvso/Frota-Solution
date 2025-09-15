@@ -7,6 +7,7 @@ import PaginaVendedores from './components/PaginaVendedores';
 import PaginaAlocacoes from './components/PaginaAlocacoes';
 import PaginaLogin from './components/PaginaLogin';
 import RotaProtegida from './components/RotaProtegida';
+import PaginaRegistroKM from './components/PaginaRegistroKM';
 import './App.css';
 
 // Componente de Layout principal que inclui a navegação
@@ -17,6 +18,7 @@ const MainLayout = () => {
     <div>
       <nav style={{ padding: '10px', background: '#eee', marginBottom: '20px', fontSize: '1.1em', display: 'flex', justifyContent: 'space-between' }}>
         <div>
+          <Link to="/" style={{ marginRight: '15px' }}>Minha Página</Link>
           <Link to="/veiculos" style={{ marginRight: '15px' }}>Veículos</Link>
           <Link to="/vendedores" style={{ marginRight: '15px' }}>Vendedores</Link>
           <Link to="/alocacoes" style={{ marginRight: '15px' }}>Alocações</Link>
@@ -28,6 +30,7 @@ const MainLayout = () => {
       </nav>
       <div style={{ padding: '0 20px' }}>
         <Routes>
+          <Route path="/" element={<PaginaRegistroKM />} /> 
           <Route path="/veiculos" element={<PaginaVeiculos />} />
           <Route path="/vendedores" element={<PaginaVendedores />} />
           <Route path="/alocacoes" element={<PaginaAlocacoes />} />

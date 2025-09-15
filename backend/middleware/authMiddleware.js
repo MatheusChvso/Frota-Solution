@@ -8,7 +8,7 @@ const proteger = (req, res, next) => {
     try {
       // Pega o token do header (ex: "Bearer eyJhbGci...")
       token = req.headers.authorization.split(' ')[1];
-
+      console.log('--- Verificando token com o segredo:', process.env.JWT_SECRET, '---');
       // Verifica se o token é válido
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -17,6 +17,7 @@ const proteger = (req, res, next) => {
 
       next(); // Passa para a próxima etapa da requisição
     } catch (error) {
+      console.error('--- ERRO na verificação do JWT:', error.message, '---');  
       res.status(401).json({ error: 'Não autorizado, token falhou.' });
     }
   }
