@@ -15,41 +15,42 @@ const PaginaLogin = () => {
     setError('');
     const sucesso = await login(email, senha);
     if (sucesso) {
-      navigate('/veiculos'); // Redireciona para a página principal após o login
+      navigate('/'); // Redireciona para a página principal após o login
     } else {
       setError('Email ou senha inválidos.');
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '50px auto' }}>
-      <h2>Login do Sistema</h2>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '10px' }}>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            required
-            style={{ width: '100%', padding: '8px' }}
-          />
+    <div className="login-container">
+        <div className="login-art"></div>
+        <div className="login-form-container">
+            <div style={{ maxWidth: '400px', width: '100%' }}>
+                <h2>Bem-vindo à Gestão de Frota</h2>
+                <p style={{ color: 'var(--cor-texto-secundario)', marginBottom: '20px'}}>Faça o login para continuar.</p>
+                <form onSubmit={handleSubmit}>
+                    {/* Seus inputs e botão continuam aqui, mas sem o style inline */}
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Email"
+                        required
+                    />
+                    <input
+                        type="password"
+                        value={senha}
+                        onChange={(e) => setSenha(e.target.value)}
+                        placeholder="Senha"
+                        required
+                    />
+                    {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
+                    <button type="submit" style={{width: '100%'}}>Entrar</button>
+                </form>
+            </div>
         </div>
-        <div style={{ marginBottom: '10px' }}>
-          <input
-            type="password"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            placeholder="Senha"
-            required
-            style={{ width: '100%', padding: '8px' }}
-          />
-        </div>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button type="submit" style={{ width: '100%', padding: '10px' }}>Entrar</button>
-      </form>
     </div>
-  );
+);
 };
 
 export default PaginaLogin;

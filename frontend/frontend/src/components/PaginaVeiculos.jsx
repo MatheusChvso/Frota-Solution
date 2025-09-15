@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { FaPencilAlt, FaTrash } from 'react-icons/fa';
+
 
 const ListaVeiculos = () => {
   const [veiculos, setVeiculos] = useState([]);
@@ -47,8 +49,8 @@ const ListaVeiculos = () => {
   // <<< --- NOVAS FUNÇÕES PARA EDIÇÃO --- >>>
   const handleEdit = (veiculo) => {
     setVeiculoEditando(veiculo);
-    setIsModalOpen(true);
-  };
+    setIsModalOpen(true); 
+  };  
 
   const handleModalChange = (event) => {
     const { name, value } = event.target;
