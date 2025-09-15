@@ -26,8 +26,8 @@ const PaginaMural = () => {
   }
 
   return (
-    <div>
-      <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+    <div className="pagina-mural">
+      <div className="mural-titulo">
         <h1>Mural da Vergonha</h1>
         <p>🏆 O CLUBE DO "AMANHÃ EU ANOTO" 🏆</p>
       </div>
@@ -35,7 +35,7 @@ const PaginaMural = () => {
       {pendentes.length > 0 ? (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
           {pendentes.map((p, index) => (
-            <div key={index} style={{ border: '2px solid #ccc', borderRadius: '8px', padding: '15px', width: '250px', textAlign: 'center' }}>
+            <div key={index} className="mural-card">
               {/* Adicionaremos a foto aqui no futuro */}
               <img 
                 src={p.caminho_foto || 'https://via.placeholder.com/150/cccccc/000000?Text=PROCURADO'} 

@@ -1,40 +1,156 @@
 /* frontend/src/App.css */
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+/* --- LAYOUT E NAVEGAÇÃO --- */
+.main-nav {
+  background-color: var(--cor-superficie);
+  padding: 0 20px;
+  height: 60px;
   display: flex;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--sombra-padrao);
+  border-bottom: 1px solid var(--cor-borda);
+}
+.nav-links a {
+  text-decoration: none;
+  color: var(--cor-texto-secundario);
+  font-weight: 500;
+  padding: 20px 15px;
+  transition: all 0.2s ease-in-out;
+}
+.nav-links a:hover {
+  color: var(--cor-texto-principal);
+}
+.nav-links a.active {
+  color: var(--cor-ouro);
+  border-bottom: 3px solid var(--cor-ouro);
+}
+.nav-user {
+  display: flex;
   align-items: center;
 }
 
-.modal-content {
-  background: white;
+.main-content {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 20px auto;
+}
+
+/* --- COMPONENTES GERAIS --- */
+h1, h2, h3 {
+  color: var(--cor-texto-principal);
+  margin-bottom: 1rem;
+}
+
+/* Formulários e Inputs */
+form {
+  background-color: var(--cor-superficie);
   padding: 20px;
   border-radius: 8px;
-  width: 400px;
-}
-
-.modal-content form {
+  box-shadow: var(--sombra-padrao);
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+}
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid var(--cor-borda);
+  font-size: 1rem;
+  flex-grow: 1;
+}
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--cor-ouro);
+  box-shadow: 0 0 0 2px rgba(191, 161, 92, 0.25);
 }
 
-/* Adicione este bloco para corrigir o texto branco no modal */
+/* Botões */
+button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+button[type="submit"] {
+  background-color: var(--cor-ouro);
+  color: white;
+}
+button[type="submit"]:hover {
+  background-color: var(--cor-ouro-hover);
+}
+.btn-logout {
+  background-color: transparent;
+  color: var(--cor-texto-principal);
+  border: 1px solid var(--cor-borda);
+}
+
+/* Tabelas */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--cor-superficie);
+  box-shadow: var(--sombra-padrao);
+}
+th, td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--cor-borda);
+}
+thead tr {
+  background-color: var(--cor-fundo);
+}
+tbody tr:hover {
+  background-color: #f1f1f1;
+}
+td button {
+  margin-right: 5px;
+}
+
+/* Modal */
+.modal-content {
+  background: var(--cor-superficie);
+}
 .modal-content input,
-.modal-content select,
-.modal-content button {
-  color: #333; /* Define uma cor de texto escura */
-  font-size: 1rem; /* Garante um tamanho de fonte legível */
-  padding: 8px; /* Melhora a aparência */
-  margin-bottom: 5px; /* Adiciona um pequeno espaço */
+.modal-content select {
+    width: 100%;
 }
 
-.modal-content button {
-    color: white; /* Mantém o texto do botão branco se o fundo for colorido */
+
+/* frontend/src/App.css */
+
+/* --- ESTILOS DO MURAL DA VERGONHA --- */
+.pagina-mural .mural-titulo {
+  text-align: center;
+  margin-bottom: 30px;
+}
+.pagina-mural .mural-titulo h1 {
+  color: var(--cor-vermelho-royal);
+}
+
+.mural-card {
+  border: 2px solid var(--cor-vermelho-royal);
+  border-radius: 8px;
+  padding: 15px;
+  width: 250px;
+  text-align: center;
+  background-color: var(--cor-superficie);
+  box-shadow: var(--sombra-padrao);
+}
+.mural-card img {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--cor-vermelho-royal);
 }
