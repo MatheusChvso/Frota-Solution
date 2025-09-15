@@ -175,3 +175,12 @@ td button {
   align-items: center;
   background-color: var(--cor-superficie);
 }
+
+/* Em frontend/src/App.css */
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}

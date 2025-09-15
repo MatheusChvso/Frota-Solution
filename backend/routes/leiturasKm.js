@@ -6,9 +6,10 @@ const { proteger } = require('../middleware/authMiddleware');
 
 // ROTA ESPECIAL: Busca o veículo atual do vendedor logado e sua última KM
 router.get('/meu-veiculo', proteger, async (req, res) => {
+    console.log('--- 1. Rota /meu-veiculo iniciada. ---');
     try {
-        // req.vendedor.id vem do token JWT decodificado pelo middleware 'proteger'
         const idVendedorLogado = req.vendedor.id;
+        console.log('--- 2. ID do vendedor obtido do token:', idVendedorLogado, '---');
 
         const sql = `
             SELECT 
@@ -17,7 +18,10 @@ router.get('/meu-veiculo', proteger, async (req, res) => {
             JOIN veiculos v ON a.id_veiculo = v.id
             WHERE a.id_vendedor = ? AND a.data_fim IS NULL
         `;
+
+        console.log('--- 3. Executando a consulta SQL... ---');
         const [rows] = await db.query(sql, [idVendedorLogado]);
+        console.log('--- 4. Consulta SQL concluída com sucesso. ---');
 
         if (rows.length > 0) {
             res.json(rows[0]);
@@ -25,7 +29,8 @@ router.get('/meu-veiculo', proteger, async (req, res) => {
             res.status(404).json({ message: 'Nenhum veículo alocado para este vendedor.' });
         }
     } catch (error) {
-        res.status(500).json({ error: 'Erro ao buscar veículo do vendedor: ' + error.message });
+        console.error('--- ERRO FATAL na rota /meu-veiculo:', error, '---');
+        res.status(500).json({ error: 'Erro ao buscar veículo do vendedor.' });
     }
 });
 

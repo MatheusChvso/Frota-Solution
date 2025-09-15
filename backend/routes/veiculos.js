@@ -63,8 +63,7 @@ router.delete('/:id', proteger, async (req, res) => {
     }
     res.json({ message: 'Veículo deletado com sucesso!' });
   } catch (error) {
-    // ADICIONE ESTA LINHA PARA VER O ERRO DETALHADO
-    console.error('--- ERRO DETALHADO AO DELETAR VEÍCULO:', error, '---'); 
+    console.error('--- ERRO DETALHADO AO DELETAR VEÍCULO:', error); // O LOG IMPORTANTE
     res.status(500).json({ error: 'Erro ao deletar veículo: ' + error.message });
   }
 });
