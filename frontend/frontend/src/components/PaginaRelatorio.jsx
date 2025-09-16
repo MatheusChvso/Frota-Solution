@@ -1,8 +1,7 @@
-// frontend/src/components/PaginaRelatorio.jsx
+// frontend/src/components/PaginaRelatorio.jsx (VERSÃO REFINADA)
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-// Um pequeno componente para a barra de progresso
 export const ProgressBar = ({ percentage }) => {
   let color = '#4caf50'; // Verde
   if (percentage > 70) color = '#ff9800'; // Laranja
@@ -14,13 +13,14 @@ export const ProgressBar = ({ percentage }) => {
         style={{ 
           width: `${percentage > 100 ? 100 : percentage}%`, 
           backgroundColor: color, 
-          height: '20px', 
+          height: '24px', 
           borderRadius: '4px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           color: 'white',
-          fontWeight: 'bold'
+          fontWeight: 'bold',
+          transition: 'width 0.5s ease-in-out, background-color 0.5s ease' // Transição suave
         }}
       >
         {percentage}%
@@ -55,7 +55,7 @@ const PaginaRelatorio = () => {
     <div>
       <h1>Relatório Mensal de Consumo de KM</h1>
       <p>Este relatório mostra o total de quilômetros rodados por cada veículo no mês corrente.</p>
-      <table border="1" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+      <table>
         <thead>
           <tr>
             <th>Veículo</th>
@@ -65,20 +65,27 @@ const PaginaRelatorio = () => {
           </tr>
         </thead>
         <tbody>
-          {relatorio.map(item => (
-            <tr key={item.id}>
-              <td>{item.modelo} ({item.placa})</td>
-              <td>{item.limite_km_mensal}</td>
-              <td>{item.km_rodados_mes}</td>
-              <td>
-                {item.limite_km_mensal > 0 ? (
-                  <ProgressBar percentage={item.percentual_usado} />
-                ) : (
-                  <span>Sem limite definido</span>
-                )}
-              </td>
-            </tr>
-          ))}
+           {relatorio.map(item => {
+             // --- LOG DE DEPURAÇÃO DO FRONTEND ---
+             if (item.placa === 'CCC-000') {
+               console.log('[FRONTEND] Dados recebidos para o item:', item);
+             }
+             // --- FIM DO LOG ---
+             return (
+               <tr key={item.id}>
+                 <td>{item.modelo} ({item.placa})</td>
+                 <td>{item.limite_km_mensal.toLocaleString('pt-BR')}</td>
+                 <td>{item.km_rodados_mes.toLocaleString('pt-BR')}</td>
+                 <td>
+                   {item.limite_km_mensal > 0 ? (
+                     <ProgressBar percentage={item.percentual_usado} />
+                   ) : (
+                     <span>Sem limite definido</span>
+                   )}
+                 </td>
+               </tr>
+             );
+           })}
         </tbody>
       </table>
     </div>

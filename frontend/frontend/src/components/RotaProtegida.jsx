@@ -1,17 +1,23 @@
-// frontend/src/components/RotaProtegida.jsx
+// frontend/src/components/RotaProtegida.jsx (VERSÃO FINAL E CORRIGIDA)
 import React, { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 const RotaProtegida = ({ children }) => {
-  const { token } = useContext(AuthContext);
+  const { token, isLoading } = useContext(AuthContext); // <-- PEGA O 'isLoading' DO CONTEXTO
 
+  // Se ainda estivermos inicializando a autenticação, mostramos uma tela de carregamento
+  if (isLoading) {
+    return <div>Carregando aplicação...</div>;
+  }
+
+  // Se a inicialização terminou e não há token, redireciona para o login
   if (!token) {
-    // Se não há token, redireciona para a página de login
     return <Navigate to="/login" replace />;
   }
 
-  return children; // Se há token, renderiza a página solicitada
+  // Se a inicialização terminou e há um token, mostra a página
+  return children;
 };
 
 export default RotaProtegida;

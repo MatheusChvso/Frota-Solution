@@ -1,22 +1,37 @@
-// frontend/src/context/AuthContext.jsx
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
 export const AuthContext = createContext(null);
 
+const getInitialUser = () => {
+  const user = localStorage.getItem('user');
+  return user ? JSON.parse(user) : null;
+};
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(getInitialUser());
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [isLoading, setIsLoading] = useState(true); // <-- NOVO ESTADO DE CARREGAMENTO
 
   useEffect(() => {
     if (token) {
-      // Se temos um token, configuramos o header padrão do Axios
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      // Aqui você poderia buscar os dados do usuário se o token apenas contivesse o ID
-      const storedUser = localStorage.getItem('user');
-      if(storedUser) setUser(JSON.parse(storedUser));
+    } else {
+      delete axios.defaults.headers.common['Authorization'];
     }
+    setIsLoading(false); // <-- AVISA QUE A INICIALIZAÇÃO TERMINOU
   }, [token]);
+
+  const login = async (email, senha) => { /* ... sua função login (sem alterações) ... */ };
+  const logout = () => { /* ... sua função logout (sem alterações) ... */ };
+
+  return (
+    // Exporta o novo estado 'isLoading'
+    <AuthContext.Provider value={{ token, user, login, logout, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
 
   const login = async (email, senha) => {
     try {
@@ -28,10 +43,10 @@ export const AuthProvider = ({ children }) => {
       setToken(token);
       setUser(user);
 
-      return true; // Sucesso
+      return true;
     } catch (error) {
       console.error('Falha no login:', error);
-      return false; // Falha
+      return false;
     }
   };
 
@@ -40,7 +55,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
-    delete axios.defaults.headers.common['Authorization'];
   };
 
   return (
@@ -48,4 +62,3 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-};

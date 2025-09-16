@@ -1,5 +1,4 @@
-// frontend/src/components/PaginaMural.jsx
-
+// frontend/src/components/PaginaMural.jsx (VERSÃO REFINADA)
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -33,16 +32,14 @@ const PaginaMural = () => {
       </div>
 
       {pendentes.length > 0 ? (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
-          {pendentes.map((p, index) => (
-            <div key={index} className="mural-card">
-              {/* Adicionaremos a foto aqui no futuro */}
+        <div className="mural-container">
+          {pendentes.map((p) => (
+            <div key={p.placa} className="mural-card">
               <img 
-                src={p.caminho_foto || 'https://via.placeholder.com/150/cccccc/000000?Text=PROCURADO'} 
+                src={p.caminho_foto || `https://via.placeholder.com/150/cccccc/000000?Text=PROCURADO`} 
                 alt={`Foto de ${p.nome}`}
-                style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover' }}
               />
-              <h3 style={{ marginTop: '10px' }}>{p.nome}</h3>
+              <h3>{p.nome}</h3>
               <p>Visto pela última vez com o veículo:</p>
               <p><strong>{p.modelo} ({p.placa})</strong></p>
               <p>A quilometragem atual é um mistério...</p>
@@ -58,5 +55,4 @@ const PaginaMural = () => {
     </div>
   );
 };
-
 export default PaginaMural;

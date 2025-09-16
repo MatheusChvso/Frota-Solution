@@ -184,3 +184,17 @@ td button {
   gap: 10px;
   margin-top: 20px;
 }
+
+/* Em frontend/src/App.css */
+.mural-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+.mural-card img {
+  border: 3px solid var(--cor-vermelho-royal);
+}
+.mural-card h3 {
+  margin-top: 10px;
+}

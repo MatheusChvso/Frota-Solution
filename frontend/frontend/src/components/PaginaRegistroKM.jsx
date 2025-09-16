@@ -1,4 +1,4 @@
-// frontend/src/components/PaginaRegistroKM.jsx
+// frontend/src/components/PaginaRegistroKM.jsx (VERSÃO REFINADA)
 
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
@@ -11,8 +11,6 @@ const PaginaRegistroKM = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [kmInput, setKmInput] = useState('');
   const [dataLeitura, setDataLeitura] = useState(new Date().toISOString().split('T')[0]);
-
-  // Estados para feedback ao usuário
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -55,7 +53,6 @@ const PaginaRegistroKM = () => {
       setKmInput(''); // Limpa o input
       fetchMeuVeiculo(); // Re-busca os dados para atualizar a KM na tela
     } catch (err) {
-      // Pega a mensagem de erro específica do backend
       const errorMessage = err.response?.data?.error || 'Ocorreu um erro ao registrar.';
       setError(errorMessage);
     }
@@ -68,14 +65,15 @@ const PaginaRegistroKM = () => {
   return (
     <div>
       <h1>Minha Página</h1>
-      <p>Bem-vindo, {user.nome}!</p>
+      {/* AJUSTE AQUI para usar optional chaining */}
+      <p>Bem-vindo, {user?.nome}!</p>
 
       {meuVeiculo ? (
         <div>
           <h2>Seu Veículo Alocado</h2>
           <p><strong>Placa:</strong> {meuVeiculo.placa}</p>
           <p><strong>Modelo:</strong> {meuVeiculo.modelo}</p>
-          <p><strong>Última KM Registrada:</strong> {meuVeiculo.km_atual} km</p>
+          <p><strong>Última KM Registrada:</strong> {meuVeiculo.km_atual.toLocaleString('pt-BR')} km</p>
 
           <hr style={{ margin: '20px 0' }} />
 
@@ -87,14 +85,12 @@ const PaginaRegistroKM = () => {
               onChange={(e) => setKmInput(e.target.value)}
               placeholder="KM atual do odômetro"
               required 
-              style={{ marginRight: '10px' }}
             />
             <input 
               type="date" 
               value={dataLeitura}
               onChange={(e) => setDataLeitura(e.target.value)}
               required
-              style={{ marginRight: '10px' }}
             />
             <button type="submit">Registrar</button>
           </form>

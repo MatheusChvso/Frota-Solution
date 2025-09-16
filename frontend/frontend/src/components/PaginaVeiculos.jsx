@@ -7,13 +7,9 @@ import { FaPencilAlt, FaTrash } from 'react-icons/fa';
 const PaginaVeiculos = () => {
   const [veiculos, setVeiculos] = useState([]);
   const [novoVeiculo, setNovoVeiculo] = useState({
-    placa: '',
-    marca: '',
-    modelo: '',
-    ano: '',
-    km_atual: '',
-    limite_km_mensal: '',
-  });
+    placa: '', marca: '', modelo: '', ano: '', km_atual: '',
+    limite_km_mensal: '', data_inicio_contrato: '', tempo_contrato_meses: '', km_inicial_contrato: ''
+});
   
   // Estados para o modal de edição
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -62,17 +58,36 @@ const PaginaVeiculos = () => {
     setVeiculoEditando(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleUpdateSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.put(`http://localhost:3001/api/veiculos/${veiculoEditando.id}`, veiculoEditando);
-      setIsModalOpen(false);
-      fetchVeiculos();
-    } catch (error) {
-      alert('Erro ao atualizar veículo.');
-      console.error('Erro ao atualizar veículo:', error);
+
+const handleUpdateSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    // --- INÍCIO DA CORREÇÃO ---
+    // Criamos uma cópia dos dados para não modificar o estado diretamente
+    const dadosParaEnviar = { ...veiculoEditando };
+
+    // Verificamos se a data existe e a formatamos para o padrão AAAA-MM-DD
+    if (dadosParaEnviar.data_inicio_contrato) {
+      // O 'new Date()' garante que mesmo que a data já esteja formatada, não quebre.
+      // O '.toISOString().split('T')[0]' extrai apenas a parte 'AAAA-MM-DD'.
+      dadosParaEnviar.data_inicio_contrato = new Date(dadosParaEnviar.data_inicio_contrato).toISOString().split('T')[0];
     }
-  };
+    // --- FIM DA CORREÇÃO ---
+
+    // Agora enviamos os dados já formatados para a API
+    await axios.put(`http://localhost:3001/api/veiculos/${veiculoEditando.id}`, dadosParaEnviar);
+    
+    setIsModalOpen(false);
+    fetchVeiculos();
+  } catch (error) {
+    console.error('ERRO ao atualizar veículo:', error);
+    if (error.response) {
+      alert(`Erro da API: ${error.response.data.error || 'Erro desconhecido.'}`);
+    } else {
+      alert('Erro de rede ou de configuração ao tentar atualizar.');
+    }
+  }
+};
 
   const handleAbrirConfirmacaoDelete = (id) => {
     setIdParaDeletar(id);
@@ -96,13 +111,19 @@ const PaginaVeiculos = () => {
       <h1>Gerenciar Veículos</h1>
       <h2>Cadastrar Novo Veículo</h2>
       <form onSubmit={handleSubmit}>
-        <input name="placa" value={novoVeiculo.placa} onChange={handleInputChange} placeholder="Placa" required />
-        <input name="marca" value={novoVeiculo.marca} onChange={handleInputChange} placeholder="Marca" required />
-        <input name="modelo" value={novoVeiculo.modelo} onChange={handleInputChange} placeholder="Modelo" required />
-        <input name="ano" type="number" value={novoVeiculo.ano} onChange={handleInputChange} placeholder="Ano" required />
-        <input name="km_atual" type="number" value={novoVeiculo.km_atual} onChange={handleInputChange} placeholder="KM Atual" />
-        <input name="limite_km_mensal" type="number" value={novoVeiculo.limite_km_mensal} onChange={handleInputChange} placeholder="Limite KM Mensal" />
-        <button type="submit">Cadastrar</button>
+          <input name="placa" value={novoVeiculo.placa} onChange={handleInputChange} placeholder="Placa" required />
+          <input name="marca" value={novoVeiculo.marca} onChange={handleInputChange} placeholder="Marca" required />
+          <input name="modelo" value={novoVeiculo.modelo} onChange={handleInputChange} placeholder="Modelo" required />
+          <input name="ano" type="number" value={novoVeiculo.ano} onChange={handleInputChange} placeholder="Ano" required />
+          <input name="km_atual" type="number" value={novoVeiculo.km_atual} onChange={handleInputChange} placeholder="KM Atual" />
+          <input name="limite_km_mensal" type="number" value={novoVeiculo.limite_km_mensal} onChange={handleInputChange} placeholder="Limite KM Mensal" />
+      
+          {/* --- ADICIONE OS CAMPOS ABAIXO --- */}
+          <input name="data_inicio_contrato" type="date" value={novoVeiculo.data_inicio_contrato} onChange={handleInputChange} placeholder="Data de Início do Contrato" />
+          <input name="tempo_contrato_meses" type="number" value={novoVeiculo.tempo_contrato_meses} onChange={handleInputChange} placeholder="Duração do Contrato (meses)" />
+          <input name="km_inicial_contrato" type="number" value={novoVeiculo.km_inicial_contrato} onChange={handleInputChange} placeholder="KM Inicial do Contrato" />
+      
+          <button type="submit">Cadastrar</button>
       </form>
 
       <hr style={{ margin: '2rem 0' }} />

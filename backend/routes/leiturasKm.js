@@ -34,7 +34,8 @@ router.get('/meu-veiculo', proteger, async (req, res) => {
     }
 });
 
-// ROTA PARA REGISTRAR UMA NOVA LEITURA DE KM
+// Em backend/routes/leiturasKm.js
+
 router.post('/', proteger, async (req, res) => {
     const idVendedorLogado = req.vendedor.id;
     const { km_atual, data_leitura } = req.body;
@@ -52,13 +53,24 @@ router.post('/', proteger, async (req, res) => {
         const id_alocacao = alocacoes[0].id;
         const id_veiculo = alocacoes[0].id_veiculo;
 
-        // 2. Validar se a nova KM é maior que a anterior
-        const [veiculos] = await db.query('SELECT km_atual FROM veiculos WHERE id = ?', [id_veiculo]);
-        if (parseInt(km_atual, 10) <= veiculos[0].km_atual) {
-            return res.status(400).json({ error: `A nova quilometragem (${km_atual}) deve ser maior que a anterior (${veiculos[0].km_atual}).` });
+        // 2. Buscar dados do veículo, incluindo a data do contrato
+        const [veiculos] = await db.query('SELECT km_atual, data_inicio_contrato FROM veiculos WHERE id = ?', [id_veiculo]);
+        const veiculo = veiculos[0];
+
+        // --- NOVA VALIDAÇÃO ---
+        // 3. Verificar se a data da leitura é anterior ao início do contrato
+        if (veiculo.data_inicio_contrato && new Date(data_leitura) < new Date(veiculo.data_inicio_contrato)) {
+            return res.status(400).json({ 
+                error: `A data da leitura (${new Date(data_leitura).toLocaleDateString('pt-BR')}) não pode ser anterior à data de início do contrato (${new Date(veiculo.data_inicio_contrato).toLocaleDateString('pt-BR')}).`
+            });
         }
 
-        // 3. Inserir a nova leitura
+        // 4. Validar se a nova KM é maior que a anterior
+        if (parseInt(km_atual, 10) <= veiculo.km_atual) {
+            return res.status(400).json({ error: `A nova quilometragem (${km_atual}) deve ser maior que a anterior (${veiculo.km_atual}).` });
+        }
+
+        // 5. Inserir a nova leitura
         const sql = 'INSERT INTO leituras_km (id_alocacao, km_atual, data_leitura) VALUES (?, ?, ?)';
         await db.query(sql, [id_alocacao, km_atual, data_leitura]);
 

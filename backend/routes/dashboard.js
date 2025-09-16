@@ -1,22 +1,21 @@
-// backend/routes/dashboard.js
+// backend/routes/dashboard.js (VERSÃO FINAL E CORRETA)
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { proteger } = require('../middleware/authMiddleware');
 
-// ROTA PARA BUSCAR OS DADOS GERAIS DO DASHBOARD (POR VEÍCULO)
 router.get('/visao-geral', proteger, async (req, res) => {
   try {
     const sql = `
       SELECT 
         v.id, v.modelo, v.placa, v.km_atual, v.limite_km_mensal, v.tempo_contrato_meses, v.km_inicial_contrato
-      FROM veiculos
-      WHERE v.tempo_contrato_meses IS NOT NULL AND v.km_inicial_contrato IS NOT NULL
+      FROM veiculos v
+      WHERE v.tempo_contrato_meses IS NOT NULL AND v.km_inicial_contrato IS NOT NULL AND v.tempo_contrato_meses > 0
     `;
     const [veiculos] = await db.query(sql);
 
     const relatorioContrato = veiculos.map(v => {
-      const limiteContrato = (v.limite_km_mensal || 0) * (v.tempo_contrato_meses || 0);
+      const limiteContrato = (v.limite_km_mensal || 0) * v.tempo_contrato_meses;
       const kmTotalRodado = v.km_atual - v.km_inicial_contrato;
       const percentualUso = limiteContrato > 0 ? Math.round((kmTotalRodado / limiteContrato) * 100) : 0;
       return {
@@ -32,7 +31,7 @@ router.get('/visao-geral', proteger, async (req, res) => {
   }
 });
 
-// Rota para buscar os dados do Mural da Vergonha
+// Rota do Mural da Vergonha
 router.get('/mural-da-vergonha', proteger, async (req, res) => {
   try {
     const sql = `

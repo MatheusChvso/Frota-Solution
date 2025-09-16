@@ -1,4 +1,7 @@
-// backend/index.js
+// backend/index.js (VERSÃO CORRIGIDA E LIMPA)
+
+// A configuração do dotenv deve ser a primeira coisa a ser executada
+require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
@@ -26,7 +29,6 @@ app.use('/api/vendedores', vendedoresRoutes);
 app.use('/api/alocacoes', alocacoesRoutes);
 app.use('/api/leituras-km', leiturasKmRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-console.log('>>> [OK] Rotas do dashboard foram registradas no Express com o prefixo /api/dashboard.');
 app.use('/api/relatorios', relatoriosRoutes);
 app.use('/api/manutencao', manutencaoRoutes);
 
