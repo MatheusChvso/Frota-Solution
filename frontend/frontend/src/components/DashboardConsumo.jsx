@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './DashboardConsumo.css'; // Vamos criar este arquivo para os estilos
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import './DashboardConsumo.css';
 
 // Componente auxiliar para a barra de progresso
 const ProgressBar = ({ value, max }) => {
   const percentage = max > 0 ? (value / max) * 100 : 0;
-  const cappedPercentage = Math.min(percentage, 100); // Garante que a barra não passe de 100%
+  const cappedPercentage = Math.min(percentage, 100);
 
   let barColor = '#4caf50'; // Verde (bom)
   if (percentage > 85) barColor = '#ff9800'; // Laranja (alerta)
@@ -28,9 +29,7 @@ const DashboardConsumo = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Pega o token do localStorage para autenticar a requisição
       const token = localStorage.getItem('token');
-
       if (!token) {
         setError("Token de autenticação não encontrado.");
         setIsLoading(false);
@@ -39,9 +38,7 @@ const DashboardConsumo = () => {
 
       try {
         const response = await axios.get('http://localhost:3001/api/dashboard/consumo-frota', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { 'Authorization': `Bearer ${token}` }
         });
         setDashboardData(response.data);
       } catch (err) {
@@ -51,45 +48,38 @@ const DashboardConsumo = () => {
         setIsLoading(false);
       }
     };
-
     fetchData();
-  }, []); // O array vazio [] garante que o useEffect rode apenas uma vez
+  }, []);
 
   if (isLoading) {
     return <div className="dashboard-container"><p>Carregando dados do dashboard...</p></div>;
   }
-
   if (error) {
     return <div className="dashboard-container"><p style={{ color: 'red' }}>{error}</p></div>;
   }
-
   if (!dashboardData) {
-    return null; // Não renderiza nada se não houver dados
+    return null;
   }
 
-  const { metas, consumoReal } = dashboardData;
+  // A linha corrigida está aqui!
+  const { metas, consumoReal, graficoConsumoDiario } = dashboardData;
 
   return (
     <div className="dashboard-container">
       <h1>Dashboard de Consumo da Frota</h1>
       <div className="cards-grid">
-        {/* Card Diário */}
         <div className="card">
           <h2>Uso Hoje</h2>
           <p className="consumo-valor">{consumoReal.hoje.toLocaleString()} km</p>
           <p className="consumo-meta">Meta: {metas.diaria.toLocaleString()} km</p>
           <ProgressBar value={consumoReal.hoje} max={metas.diaria} />
         </div>
-
-        {/* Card Mensal */}
         <div className="card">
           <h2>Uso no Mês</h2>
           <p className="consumo-valor">{consumoReal.mesAtual.toLocaleString()} km</p>
           <p className="consumo-meta">Meta: {metas.mensal.toLocaleString()} km</p>
           <ProgressBar value={consumoReal.mesAtual} max={metas.mensal} />
         </div>
-
-        {/* Card Contrato */}
         <div className="card">
           <h2>Progresso do Contrato</h2>
           <p className="consumo-valor">{consumoReal.totalAcumulado.toLocaleString()} km</p>
@@ -98,8 +88,24 @@ const DashboardConsumo = () => {
         </div>
       </div>
       <div className="grafico-container">
-        <h2>Consumo Detalhado</h2>
-        <p>(O gráfico de consumo diário será implementado aqui)</p>
+        <h2>Consumo Detalhado (Últimos 30 dias)</h2>
+        {graficoConsumoDiario.length > 0 ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart
+              data={graficoConsumoDiario}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="dia" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="consumo" stroke="#8884d8" name="Consumo (KM)" />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <p>Não há dados suficientes para exibir o gráfico de consumo diário.</p>
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,3 @@
-// backend/routes/veiculos.js (VERSÃO FINAL E REFINADA)
-
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
@@ -14,6 +12,22 @@ router.get('/', proteger, async (req, res) => {
     res.status(500).json({ error: 'Erro ao buscar veículos: ' + error.message });
   }
 });
+
+// ========================================================================
+// NOVA ROTA PARA O DASHBOARD - Listar veículos alocados para o seletor
+// ========================================================================
+router.get('/alocados', proteger, async (req, res) => {
+  try {
+    const [veiculos] = await db.query(
+      "SELECT id, modelo, placa FROM veiculos WHERE status = 'em_uso' ORDER BY modelo"
+    );
+    res.status(200).json(veiculos);
+  } catch (error) {
+    console.error("Erro ao buscar veículos alocados:", error);
+    res.status(500).json({ error: "Erro interno do servidor." });
+  }
+});
+// ========================================================================
 
 // ROTA POST: Criar um novo veículo (protegida)
 router.post('/', proteger, async (req, res) => {
