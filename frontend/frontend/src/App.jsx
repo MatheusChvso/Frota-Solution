@@ -1,8 +1,10 @@
-// frontend/src/App.jsx (VERSÃO CORRIGIDA E LIMPA)
-
 import React, { useContext } from 'react';
 import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+
+// Importando a nova página do Dashboard
+import DashboardConsumo from './components/DashboardConsumo'; 
+
 import PaginaVeiculos from './components/PaginaVeiculos';
 import PaginaVendedores from './components/PaginaVendedores';
 import PaginaAlocacoes from './components/PaginaAlocacoes';
@@ -10,10 +12,9 @@ import PaginaLogin from './components/PaginaLogin';
 import RotaProtegida from './components/RotaProtegida';
 import PaginaRegistroKM from './components/PaginaRegistroKM';
 import PaginaMural from './components/PaginaMural';
-import PaginaRelatorio from './components/PaginaRelatorio';
 import PaginaTiposManutencao from './components/PaginaTiposManutencao';
 import PaginaManutencao from './components/PaginaManutencao';
-import PaginaDashboard from './components/PaginaDashboard';
+
 import './App.css';
 
 // Componente de Layout principal que inclui a navegação
@@ -24,10 +25,12 @@ const MainLayout = () => {
     <div>
       <nav className="main-nav">
         <div className="nav-links">
-          <NavLink to="/dashboard">Dashboard</NavLink>
-          <NavLink to="/">Minha Página</NavLink>
+          {/* Rota principal agora é o Dashboard */}
+          <NavLink to="/">Dashboard</NavLink>
           <NavLink to="/mural">Mural da Vergonha</NavLink>
-          <NavLink to="/relatorios">Relatórios</NavLink>
+          {/* Link para a página de registro de KM */}
+          <NavLink to="/registrar-km">Registrar KM</NavLink>
+
           <NavLink to="/manutencao">Painel de Manutenção</NavLink>
           <NavLink to="/manutencao/tipos">Tipos de Manutenção</NavLink>
           <NavLink to="/veiculos">Gerenciar Veículos</NavLink>
@@ -41,10 +44,12 @@ const MainLayout = () => {
       </nav>
       <main className="main-content">
         <Routes>
-          <Route path="/dashboard" element={<PaginaDashboard />} />
-          <Route path="/" element={<PaginaRegistroKM />} />
+          {/* Rota principal agora renderiza o DashboardConsumo */}
+          <Route path="/" element={<DashboardConsumo />} />
           <Route path="/mural" element={<PaginaMural />} />
-          <Route path="/relatorios" element={<PaginaRelatorio />} />
+          {/* Nova rota para a página de registro de KM */}
+          <Route path="/registrar-km" element={<PaginaRegistroKM />} />
+
           <Route path="/manutencao" element={<PaginaManutencao />} />
           <Route path="/manutencao/tipos" element={<PaginaTiposManutencao />} />
           <Route path="/veiculos" element={<PaginaVeiculos />} />

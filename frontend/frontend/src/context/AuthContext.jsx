@@ -11,7 +11,7 @@ const getInitialUser = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(getInitialUser());
   const [token, setToken] = useState(localStorage.getItem('token'));
-  const [isLoading, setIsLoading] = useState(true); // <-- NOVO ESTADO DE CARREGAMENTO
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (token) {
@@ -19,20 +19,10 @@ export const AuthProvider = ({ children }) => {
     } else {
       delete axios.defaults.headers.common['Authorization'];
     }
-    setIsLoading(false); // <-- AVISA QUE A INICIALIZAÇÃO TERMINOU
+    setIsLoading(false);
   }, [token]);
 
-  const login = async (email, senha) => { /* ... sua função login (sem alterações) ... */ };
-  const logout = () => { /* ... sua função logout (sem alterações) ... */ };
-
-  return (
-    // Exporta o novo estado 'isLoading'
-    <AuthContext.Provider value={{ token, user, login, logout, isLoading }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
+  // **Login function implemented here**
   const login = async (email, senha) => {
     try {
       const response = await axios.post('http://localhost:3001/api/vendedores/login', { email, senha });
@@ -50,6 +40,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // **Logout function implemented here**
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -57,8 +48,10 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // **Single, correct return statement**
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={{ token, user, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
+};
