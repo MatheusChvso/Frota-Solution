@@ -1,62 +1,93 @@
 // frontend/src/pages/DashboardConsumo/DashboardConsumo.jsx
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { AuthContext } from '../context/AuthContext';
 import SaldoVeiculo from '../components/SaldoVeiculo';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './DashboardConsumo.css';
 
 const DashboardConsumo = () => {
-  const { token } = useContext(AuthContext);
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [listaVeiculos, setListaVeiculos] = useState([]);
+  // Não precisamos mais da lista de veículos, pois a própria tabela servirá como seletor
   const [veiculoSelecionado, setVeiculoSelecionado] = useState('geral');
-
-  // Busca a lista de veículos para o dropdown (apenas para usuários logados)
-  useEffect(() => {
-    const fetchVeiculos = async () => { if (token) { try { const { data } = await axios.get('http://localhost:3001/api/veiculos/alocados', { headers: { 'Authorization': `Bearer ${token}` } }); setListaVeiculos(data); } catch (err) { console.error("Não foi possível carregar a lista de veículos."); } } };
-    fetchVeiculos();
-  }, [token]);
+  const [tituloResumo, setTituloResumo] = useState('Resumo da Frota');
 
   useEffect(() => {
     const fetchData = async () => {
+      // Começa o carregamento sempre que a seleção muda
       setIsLoading(true);
-      let url = `http://localhost:3001/api/dashboard/${veiculoSelecionado === 'geral' ? 'geral' : `veiculo/${veiculoSelecionado}`}`;
-      const config = { headers: {} };
-      if (veiculoSelecionado !== 'geral') { config.headers['Authorization'] = `Bearer ${token}`; }
+      
+      const url = `http://localhost:3001/api/dashboard/${veiculoSelecionado === 'geral' ? 'geral' : `veiculo/${veiculoSelecionado}`}`;
+
       try {
-        const response = await axios.get(url, config);
+        const response = await axios.get(url);
         setDashboardData(response.data);
-      } catch (error) { console.error('Erro ao buscar dados do dashboard:', error); } 
-      finally { setIsLoading(false); }
+
+        if (veiculoSelecionado !== 'geral' && response.data.infoVeiculo) {
+          setTituloResumo(`Resumo para ${response.data.infoVeiculo.modelo} (${response.data.infoVeiculo.placa})`);
+        } else {
+          setTituloResumo('Resumo da Frota');
+        }
+      } catch (error) { 
+        console.error('Erro ao buscar dados do dashboard:', error);
+        setDashboardData(null); // Limpa os dados em caso de erro
+      } finally { 
+        setIsLoading(false); 
+      }
     };
     fetchData();
-  }, [veiculoSelecionado, token]);
+  }, [veiculoSelecionado]);
 
-  if (isLoading) return <div className="dashboard-container"><p>Carregando dashboard...</p></div>;
-  if (!dashboardData) return <div className="dashboard-container"><p>Não foi possível carregar os dados.</p></div>;
+  // Função para mudar a seleção e limpar os dados antigos, forçando o "loading"
+  const handleSelectionChange = (id) => {
+    setDashboardData(null); // <-- MUDANÇA IMPORTANTE: limpa dados antigos
+    setVeiculoSelecionado(id);
+  };
 
-  const { resumo, viewData, infoVeiculo } = dashboardData;
+  // Se não houver dados AINDA, mostra o loading.
+  if (isLoading || !dashboardData) {
+    return <div className="dashboard-container"><p>Carregando dashboard...</p></div>;
+  }
+  
+  const { resumo, viewData } = dashboardData;
 
   return (
     <div className="dashboard-container">
-      {/* ... (código do header e resumo sem alteração) */}
-      <div className="dashboard-header"><h1>Análise de Consumo</h1>{token && (<select value={veiculoSelecionado} onChange={e => setVeiculoSelecionado(e.target.value)}><option value="geral">Frota Geral</option>{listaVeiculos.map(v => <option key={v.id} value={v.id}>{v.modelo} - {v.placa}</option>)}</select>)}</div>
-      {resumo && (<div className="resumo-grid"><div className="resumo-card"><h3>Consumo Hoje</h3><p>{resumo.consumoDia.toLocaleString()} km</p></div><div className="resumo-card"><h3>Consumo no Mês</h3><p>{resumo.consumoMes.toLocaleString()} km</p></div><div className="resumo-card"><h3>Limite Total</h3><p>{resumo.limiteTotalContrato.toLocaleString()} km</p></div></div>)}
-      {infoVeiculo && (<div className="info-veiculo-container"><h3>{infoVeiculo.modelo} - {infoVeiculo.placa}</h3><p>Responsável: {infoVeiculo.nomeVendedor}</p></div>)}
-
+      <div className="resumo-container">
+        <div className="resumo-header">
+          <h2>{tituloResumo}</h2>
+          {veiculoSelecionado !== 'geral' && (
+            <button onClick={() => handleSelectionChange('geral')} className="btn-limpar-selecao">
+              Ver Frota Geral
+            </button>
+          )}
+        </div>
+        {resumo && (
+          <div className="resumo-grid">
+            <div className="resumo-card"><h3>Consumo Hoje</h3><p>{resumo.consumoDia.toLocaleString()} km</p></div>
+            <div className="resumo-card"><h3>Consumo no Mês</h3><p>{resumo.consumoMes.toLocaleString()} km</p></div>
+            <div className="resumo-card"><h3>Limite Total do Contrato</h3><p>{resumo.limiteTotalContrato.toLocaleString()} km</p></div>
+          </div>
+        )}
+      </div>
       
-       {veiculoSelecionado === 'geral' ? (
+      {/* A tabela agora só é renderizada na visão geral */}
+      {veiculoSelecionado === 'geral' && viewData ? (
         <table className="tabela-saldos">
-          <thead><tr><th>Veículo</th><th>Responsável</th><th style={{width: '50%'}}>Balanço</th><th>Saldo (km)</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Veículo</th>
+              <th>Responsável</th>
+              <th style={{width: '50%'}}>Balanço de Consumo</th>
+              <th>Saldo Atual (km)</th>
+            </tr>
+          </thead>
           <tbody>
-            {viewData && viewData.map(veiculo => (
-              // ==== A CORREÇÃO ESTÁ AQUI ====
-              // Só renderiza a linha se o objeto tiver a propriedade 'saldo_km'
+            {viewData.map(veiculo => (
+              // Verificação de segurança para garantir que o objeto é do tipo correto
               veiculo.hasOwnProperty('saldo_km') && (
-                <tr key={veiculo.id}>
+                <tr key={veiculo.id} onClick={() => handleSelectionChange(veiculo.id)} className="linha-clicavel">
                   <td>{veiculo.modelo} ({veiculo.placa})</td>
                   <td>{veiculo.responsavel || 'N/A'}</td>
                   <td><SaldoVeiculo veiculo={veiculo} /></td>
@@ -69,7 +100,7 @@ const DashboardConsumo = () => {
           </tbody>
         </table>
       ) : (
-        // Se for um VEÍCULO ESPECÍFICO, renderiza o GRÁFICO
+         // O gráfico agora é renderizado quando um veículo é selecionado
         <div className="grafico-container">
           <h2>Consumo Detalhado (Últimos 30 dias)</h2>
           {viewData && viewData.length > 0 ? (

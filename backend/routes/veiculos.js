@@ -16,7 +16,7 @@ router.get('/', proteger, async (req, res) => {
 // ========================================================================
 // NOVA ROTA PARA O DASHBOARD - Listar veículos alocados para o seletor
 // ========================================================================
-router.get('/alocados', proteger, async (req, res) => {
+router.get('/alocados', async (req, res) => {
   try {
     const [veiculos] = await db.query(
       "SELECT id, modelo, placa FROM veiculos WHERE status = 'em_uso' ORDER BY modelo"
