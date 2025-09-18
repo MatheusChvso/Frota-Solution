@@ -12,4 +12,8 @@ router.get('/consumo-frota/geral', dashboardController.getConsumoFrota);
 // :veiculoId é um parâmetro que pegaremos no controller
 router.get('/consumo-frota/:veiculoId', proteger, dashboardController.getConsumoFrota);
 
+
+router.get('/mural-da-vergonha', proteger, dashboardController.getMuralDaVergonha);
+
+
 module.exports = router;
