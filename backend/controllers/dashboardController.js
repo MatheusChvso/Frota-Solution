@@ -1,76 +1,59 @@
-// backend/controllers/dashboardController.js
-
 const pool = require('../db'); 
 
-// NOVA FUNÇÃO PARA O DASHBOARD DE SALDOS
-exports.getSaldosVeiculos = async (req, res) => {
+exports.getDashboardData = async (req, res) => {
+  const { veiculoId } = req.params;
+  const params = veiculoId ? [veiculoId] : [];
+  const whereVeiculo = veiculoId ? `WHERE v.id = ?` : '';
+  const andAlocacaoVeiculo = veiculoId ? `AND a.id_veiculo = ?` : '';
+  
   try {
-    const query = `
-      WITH leituras_recentes AS (
-        SELECT
-          a.id_veiculo,
-          MAX(lk.km_atual) AS km_final
-        FROM leituras_km lk
-        JOIN alocacoes a ON lk.id_alocacao = a.id
-        GROUP BY a.id_veiculo
-      )
-      SELECT
-        v.id,
-        v.placa,
-        v.modelo,
-        vend.nome AS responsavel,
-        (TIMESTAMPDIFF(MONTH, v.data_inicio_contrato, CURDATE()) + 1) AS meses_passados,
-        v.limite_km_mensal,
-        (v.limite_km_mensal * (TIMESTAMPDIFF(MONTH, v.data_inicio_contrato, CURDATE()) + 1)) AS meta_cumulativa,
-        (COALESCE(lr.km_final, v.km_atual) - v.km_inicial_contrato) AS consumo_real_total,
-        (v.limite_km_mensal * (TIMESTAMPDIFF(MONTH, v.data_inicio_contrato, CURDATE()) + 1)) - (COALESCE(lr.km_final, v.km_atual) - v.km_inicial_contrato) AS saldo_km
-      FROM
-        veiculos v
-      LEFT JOIN
-        alocacoes a ON v.id = a.id_veiculo AND a.data_fim IS NULL
-      LEFT JOIN
-        vendedores vend ON a.id_vendedor = vend.id
-      LEFT JOIN
-        leituras_recentes lr ON v.id = lr.id_veiculo
-      WHERE
-        v.status = 'em_uso' AND v.data_inicio_contrato IS NOT NULL
-      ORDER BY saldo_km ASC;
-    `;
+    const queryConsumoHoje = `SELECT SUM(lh.odometro_atual - COALESCE(la.odometro_anterior, v.km_inicial_contrato)) AS consumo_total_hoje FROM veiculos v JOIN (SELECT a.id_veiculo, MAX(lk.km_atual) AS odometro_atual FROM leituras_km lk JOIN alocacoes a ON lk.id_alocacao = a.id WHERE lk.data_leitura >= CURRENT_DATE AND lk.data_leitura < CURRENT_DATE + INTERVAL 1 DAY ${andAlocacaoVeiculo} GROUP BY a.id_veiculo) AS lh ON v.id = lh.id_veiculo LEFT JOIN (SELECT a.id_veiculo, MAX(lk.km_atual) AS odometro_anterior FROM leituras_km lk JOIN alocacoes a ON lk.id_alocacao = a.id WHERE lk.data_leitura < CURRENT_DATE ${andAlocacaoVeiculo} GROUP BY a.id_veiculo) AS la ON v.id = la.id_veiculo ${whereVeiculo} ${veiculoId ? 'AND' : 'WHERE'} v.km_inicial_contrato IS NOT NULL;`;
+    const queryConsumoMes = `SELECT SUM(lma.odometro_mes_atual - COALESCE(lman.odometro_anterior, v.km_inicial_contrato)) AS consumo_total_mes FROM veiculos v JOIN (SELECT a.id_veiculo, MAX(lk.km_atual) AS odometro_mes_atual FROM leituras_km lk JOIN alocacoes a ON lk.id_alocacao = a.id WHERE YEAR(lk.data_leitura) = YEAR(CURRENT_DATE) AND MONTH(lk.data_leitura) = MONTH(CURRENT_DATE) ${andAlocacaoVeiculo} GROUP BY a.id_veiculo) AS lma ON v.id = lma.id_veiculo LEFT JOIN (SELECT a.id_veiculo, MAX(lk.km_atual) AS odometro_anterior FROM leituras_km lk JOIN alocacoes a ON lk.id_alocacao = a.id WHERE CONCAT(YEAR(lk.data_leitura), '-', LPAD(MONTH(lk.data_leitura), 2, '0')) < CONCAT(YEAR(CURRENT_DATE), '-', LPAD(MONTH(CURRENT_DATE), 2, '0')) ${andAlocacaoVeiculo} GROUP BY a.id_veiculo) AS lman ON v.id = lman.id_veiculo ${whereVeiculo} ${veiculoId ? 'AND' : 'WHERE'} v.km_inicial_contrato IS NOT NULL;`;
+    const queryLimiteTotal = `SELECT SUM(limite_km_mensal * tempo_contrato_meses) AS meta_contrato_total FROM veiculos v ${whereVeiculo};`;
+
+    const querySaldos = !veiculoId ? `WITH leituras_recentes AS (SELECT a.id_veiculo, MAX(lk.km_atual) AS km_final FROM leituras_km lk JOIN alocacoes a ON lk.id_alocacao = a.id GROUP BY a.id_veiculo) SELECT v.id, v.placa, v.modelo, vend.nome AS responsavel, (TIMESTAMPDIFF(MONTH, v.data_inicio_contrato, CURDATE()) + 1) AS meses_passados, v.limite_km_mensal, (v.limite_km_mensal * (TIMESTAMPDIFF(MONTH, v.data_inicio_contrato, CURDATE()) + 1)) AS meta_cumulativa, (COALESCE(lr.km_final, v.km_atual) - v.km_inicial_contrato) AS consumo_real_total, (v.limite_km_mensal * (TIMESTAMPDIFF(MONTH, v.data_inicio_contrato, CURDATE()) + 1)) - (COALESCE(lr.km_final, v.km_atual) - v.km_inicial_contrato) AS saldo_km FROM veiculos v LEFT JOIN alocacoes a ON v.id = a.id_veiculo AND a.data_fim IS NULL LEFT JOIN vendedores vend ON a.id_vendedor = vend.id LEFT JOIN leituras_recentes lr ON v.id = lr.id_veiculo WHERE v.status = 'em_uso' AND v.data_inicio_contrato IS NOT NULL ORDER BY saldo_km ASC;` : `SELECT 1;`;
+    const queryLeiturasGrafico = veiculoId ? `SELECT lk.data_leitura, lk.km_atual, COALESCE(LAG(lk.km_atual, 1) OVER (PARTITION BY a.id_veiculo ORDER BY lk.data_leitura), v.km_inicial_contrato) AS km_anterior FROM leituras_km lk JOIN alocacoes a ON lk.id_alocacao = a.id JOIN veiculos v ON a.id_veiculo = v.id WHERE lk.data_leitura >= CURDATE() - INTERVAL 30 DAY ${andAlocacaoVeiculo} ORDER BY lk.data_leitura ASC;` : `SELECT 1;`;
+    const queryInfoVeiculo = veiculoId ? `SELECT v.modelo, v.placa, vend.nome AS nomeVendedor FROM veiculos v JOIN alocacoes a ON v.id = a.id_veiculo JOIN vendedores vend ON a.id_vendedor = vend.id WHERE a.id_veiculo = ? AND a.data_fim IS NULL LIMIT 1;` : `SELECT 1;`;
+
+    const [
+      [[resumoHoje]], [[resumoMes]], [[limiteTotal]], [saldos], [leiturasGrafico], [[infoVeiculo]]
+    ] = await Promise.all([
+      pool.query(queryConsumoHoje, veiculoId ? [veiculoId, veiculoId, veiculoId] : []),
+      pool.query(queryConsumoMes, veiculoId ? [veiculoId, veiculoId, veiculoId] : []),
+      pool.query(queryLimiteTotal, params),
+      pool.query(querySaldos),
+      pool.query(queryLeiturasGrafico, params),
+      pool.query(queryInfoVeiculo, params)
+    ]);
     
-    const [saldos] = await pool.query(query);
-    res.status(200).json(saldos);
+    const consumoPorDia = {};
+    if (veiculoId && leiturasGrafico.length > 1 && leiturasGrafico[0].km_atual) {
+      for (const leitura of leiturasGrafico) {
+        const dia = new Date(leitura.data_leitura).toISOString().split('T')[0];
+        if (!consumoPorDia[dia]) consumoPorDia[dia] = 0;
+        const kmRodado = leitura.km_atual - leitura.km_anterior;
+        if (kmRodado > 0) consumoPorDia[dia] += kmRodado;
+      }
+    }
+    const graficoFinal = Object.keys(consumoPorDia).map(dia => ({ dia: new Date(dia).toLocaleDateString('pt-BR', { timeZone: 'UTC', day: '2-digit', month: '2-digit'}), consumo: consumoPorDia[dia] }));
+    
+    res.status(200).json({
+      resumo: { consumoDia: Number(resumoHoje?.consumo_total_hoje ?? 0), consumoMes: Number(resumoMes?.consumo_total_mes ?? 0), limiteTotalContrato: Number(limiteTotal?.meta_contrato_total ?? 0) },
+      viewData: veiculoId ? graficoFinal : saldos,
+      infoVeiculo: veiculoId ? infoVeiculo : null
+    });
 
   } catch (error) {
-    console.error("Erro ao buscar saldos dos veículos:", error);
+    console.error("Erro ao buscar dados do dashboard:", error);
     res.status(500).json({ error: "Erro interno do servidor." });
   }
 };
 
-
-// FUNÇÃO DO MURAL DA VERGONHA (MANTIDA)
 exports.getMuralDaVergonha = async (req, res) => {
   try {
-    const query = `
-      SELECT
-        vend.nome,
-        vend.caminho_foto,
-        v.modelo,
-        v.placa
-      FROM alocacoes a
-      JOIN vendedores vend ON a.id_vendedor = vend.id
-      JOIN veiculos v ON a.id_veiculo = v.id
-      WHERE
-        a.data_fim IS NULL AND v.status = 'em_uso'
-        AND a.id NOT IN (
-          SELECT DISTINCT id_alocacao 
-          FROM leituras_km 
-          WHERE DATE(data_leitura) = CURRENT_DATE
-        );
-    `;
-
+    const query = `SELECT vend.nome, vend.caminho_foto, v.modelo, v.placa FROM alocacoes a JOIN vendedores vend ON a.id_vendedor = vend.id JOIN veiculos v ON a.id_veiculo = v.id WHERE a.data_fim IS NULL AND v.status = 'em_uso' AND a.id NOT IN (SELECT DISTINCT id_alocacao FROM leituras_km WHERE DATE(data_leitura) = CURRENT_DATE);`;
     const [pendentes] = await pool.query(query);
     res.status(200).json(pendentes);
-
   } catch (error) {
     console.error("Erro ao buscar dados do Mural da Vergonha:", error);
     res.status(500).json({ error: "Erro interno do servidor." });

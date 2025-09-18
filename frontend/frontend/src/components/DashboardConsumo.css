@@ -57,3 +57,33 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
+
+/* Adicione ao seu DashboardConsumo.css */
+.resumo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.resumo-card {
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.resumo-card h3 {
+  margin-top: 0;
+  font-size: 1rem;
+  color: #555;
+  font-weight: 500;
+}
+
+.resumo-card p {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #333;
+  margin: 0.5rem 0 0 0;
+}
