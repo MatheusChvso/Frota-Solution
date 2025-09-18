@@ -1,17 +1,15 @@
+// backend/routes/dashboard.js
+
 const express = require('express');
 const router = express.Router();
-
-// Importa o controller que acabamos de criar
 const dashboardController = require('../controllers/dashboardController');
-
-// Importa o middleware de autenticação
 const { proteger } = require('../middleware/authMiddleware');
 
-// Define a nova rota GET /api/dashboard/consumo-frota
-// Note que 'proteger' é executado antes da função do controller
-router.get('/consumo-frota', proteger, dashboardController.getConsumoFrota);
+// ROTA PÚBLICA: para a visão geral da frota (sem login)
+router.get('/consumo-frota/geral', dashboardController.getConsumoFrota);
 
-
-// Se você tiver outras rotas de dashboard antigas, pode removê-las ou mantê-las aqui.
+// ROTA PROTEGIDA: para a visão de um veículo específico (precisa de login)
+// :veiculoId é um parâmetro que pegaremos no controller
+router.get('/consumo-frota/:veiculoId', proteger, dashboardController.getConsumoFrota);
 
 module.exports = router;

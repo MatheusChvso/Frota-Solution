@@ -1,6 +1,6 @@
-// frontend/src/components/PaginaLogin.jsx
 import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+// 1. Importar o 'Link' junto com o 'useNavigate'
+import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 const PaginaLogin = () => {
@@ -15,7 +15,8 @@ const PaginaLogin = () => {
     setError('');
     const sucesso = await login(email, senha);
     if (sucesso) {
-      navigate('/'); // Redireciona para a página principal após o login
+      // Mude esta linha para redirecionar para a área protegida
+      navigate('/app/dashboard'); 
     } else {
       setError('Email ou senha inválidos.');
     }
@@ -29,7 +30,6 @@ const PaginaLogin = () => {
                 <h2>Bem-vindo à Gestão de Frota</h2>
                 <p style={{ color: 'var(--cor-texto-secundario)', marginBottom: '20px'}}>Faça o login para continuar.</p>
                 <form onSubmit={handleSubmit}>
-                    {/* Seus inputs e botão continuam aqui, mas sem o style inline */}
                     <input
                         type="email"
                         value={email}
@@ -46,11 +46,17 @@ const PaginaLogin = () => {
                     />
                     {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
                     <button type="submit" style={{width: '100%'}}>Entrar</button>
+
+                    {/* 2. Link para o dashboard público adicionado aqui */}
+                    <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                      <Link to="/">Ver Dashboard da Frota</Link>
+                    </div>
+                    
                 </form>
             </div>
         </div>
     </div>
-);
+  );
 };
 
 export default PaginaLogin;
