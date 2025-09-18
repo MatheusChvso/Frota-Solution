@@ -5,15 +5,10 @@ const router = express.Router();
 const dashboardController = require('../controllers/dashboardController');
 const { proteger } = require('../middleware/authMiddleware');
 
-// ROTA PÚBLICA: para a visão geral da frota (sem login)
-router.get('/consumo-frota/geral', dashboardController.getConsumoFrota);
+// Rota para o novo dashboard de Saldos de Veículos (pública)
+router.get('/saldos-veiculos', dashboardController.getSaldosVeiculos);
 
-// ROTA PROTEGIDA: para a visão de um veículo específico (precisa de login)
-// :veiculoId é um parâmetro que pegaremos no controller
-router.get('/consumo-frota/:veiculoId', proteger, dashboardController.getConsumoFrota);
-
-
+// Rota para o Mural da Vergonha (protegida)
 router.get('/mural-da-vergonha', proteger, dashboardController.getMuralDaVergonha);
-
 
 module.exports = router;
