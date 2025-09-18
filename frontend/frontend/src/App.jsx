@@ -15,6 +15,7 @@ import PaginaRegistroKM from './components/PaginaRegistroKM';
 import PaginaMural from './components/PaginaMural';
 import PaginaTiposManutencao from './components/PaginaTiposManutencao';
 import PaginaManutencao from './components/PaginaManutencao';
+import PaginaHistoricoKM from './components/PaginaHistoricoKM';
 
 import './App.css';
 
@@ -29,6 +30,7 @@ const MainLayout = () => {
           <NavLink to="/app/dashboard">Dashboard</NavLink>
           <NavLink to="/app/mural">Mural da Vergonha</NavLink>
           <NavLink to="/app/registrar-km">Registrar KM</NavLink>
+          <NavLink to="/app/historico-km">Histórico de KM</NavLink>
           <NavLink to="/app/manutencao">Painel de Manutenção</NavLink>
           {/* ...e assim por diante para todos os links */}
           <NavLink to="/app/manutencao/tipos">Tipos de Manutenção</NavLink>
@@ -47,6 +49,7 @@ const MainLayout = () => {
           <Route path="/dashboard" element={<DashboardConsumo />} />
           <Route path="/mural" element={<PaginaMural />} />
           <Route path="/registrar-km" element={<PaginaRegistroKM />} />
+          <Route path="/historico-km" element={<PaginaHistoricoKM />} />
           <Route path="/manutencao" element={<PaginaManutencao />} />
           <Route path="/manutencao/tipos" element={<PaginaTiposManutencao />} />
           <Route path="/veiculos" element={<PaginaVeiculos />} />

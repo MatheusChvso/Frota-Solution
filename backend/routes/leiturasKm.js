@@ -80,4 +80,32 @@ router.post('/', proteger, async (req, res) => {
     }
 });
 
+router.get('/historico', proteger, async (req, res) => {
+  try {
+    const query = `
+      SELECT
+        lk.id,
+        lk.data_leitura,
+        lk.km_atual,
+        v.modelo AS veiculo_modelo,
+        v.placa AS veiculo_placa,
+        vend.nome AS vendedor_nome
+      FROM leituras_km lk
+      JOIN alocacoes a ON lk.id_alocacao = a.id
+      JOIN veiculos v ON a.id_veiculo = v.id
+      JOIN vendedores vend ON a.id_vendedor = vend.id
+      ORDER BY lk.data_leitura DESC, lk.id DESC;
+    `;
+
+    const [historico] = await db.query(query);
+    res.status(200).json(historico);
+
+  } catch (error) {
+    console.error("Erro ao buscar histórico de KM:", error);
+    res.status(500).json({ error: "Erro interno do servidor." });
+  }
+});
+
+
+module.exports = router;
 module.exports = router;
