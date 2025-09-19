@@ -28,7 +28,7 @@ const MainLayout = () => {
           <NavLink to="/app/dashboard">Dashboard</NavLink> 
           {/* Novo link unificado de "Gestão" */}
           <NavLink to="/app/gestao">Gestão</NavLink>
-          <NavLink to="/app/mural">Mural da Vergonha</NavLink>
+          <NavLink to="/app/mural">Checklist Diário</NavLink>
           {/* Manutenção e Registros podem ser os próximos a serem agrupados */}
           <NavLink to="/app/manutencao">Manutenção</NavLink>
           <NavLink to="/app/historico-km">Histórico KM</NavLink>

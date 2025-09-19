@@ -75,7 +75,7 @@ const PaginaAlocacoes = () => {
 
   return (
     <div>
-      <h1>Gerenciar Alocações</h1>
+      
       <h2>Nova Alocação</h2>
       <form onSubmit={handleSubmit}>
         <select name="id_veiculo" value={novaAlocacao.id_veiculo} onChange={handleInputChange} required>

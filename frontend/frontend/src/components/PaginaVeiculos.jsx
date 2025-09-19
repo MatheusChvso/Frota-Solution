@@ -108,7 +108,7 @@ const handleUpdateSubmit = async (e) => {
 
   return (
     <div>
-      <h1>Gerenciar Veículos</h1>
+      
       <h2>Cadastrar Novo Veículo</h2>
       <form onSubmit={handleSubmit}>
           <input name="placa" value={novoVeiculo.placa} onChange={handleInputChange} placeholder="Placa" required />

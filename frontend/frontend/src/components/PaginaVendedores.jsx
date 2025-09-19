@@ -97,7 +97,6 @@ const PaginaVendedores = () => {
   // --- JSX (COM FORMULÁRIO COMPLETO) ---
   return (
     <div>
-      <h1>Gerenciar Vendedores</h1>
       <h2>Cadastrar Novo Vendedor</h2>
       <form onSubmit={handleSubmit} className="form-cadastro">
         <input type="text" name="nome" value={novoVendedor.nome} onChange={handleInputChange} placeholder="Nome Completo" required />
