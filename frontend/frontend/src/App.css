@@ -171,3 +171,19 @@ td button {
   gap: 10px;
   margin-top: 20px;
 }
+
+/* Adicione ao seu App.css */
+.btn-export {
+  display: inline-block;
+  padding: 10px 15px;
+  background-color: var(--cor-primaria);
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-export:hover {
+  background-color: #333; /* Cor um pouco mais escura */
+}
