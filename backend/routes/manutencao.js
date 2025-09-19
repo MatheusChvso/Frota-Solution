@@ -87,8 +87,13 @@ router.post('/historico', proteger, async (req, res) => {
         return res.status(400).json({ error: 'Campos obrigatórios não preenchidos.' });
     }
     try {
+        // Se 'custo' for uma string vazia, converte para null; senão, mantém o valor.
+        const custoFinal = custo === '' || custo === undefined ? null : custo;
+
         const sql = 'INSERT INTO historico_manutencao (id_veiculo, id_tipo_manutencao, data_realizacao, km_realizacao, custo, observacoes) VALUES (?, ?, ?, ?, ?, ?)';
-        const [result] = await db.query(sql, [id_veiculo, id_tipo_manutencao, data_realizacao, km_realizacao, custo, observacoes]);
+        
+        const [result] = await db.query(sql, [id_veiculo, id_tipo_manutencao, data_realizacao, km_realizacao, custoFinal, observacoes]);
+        
         res.status(201).json({ message: 'Histórico de manutenção registrado com sucesso!', id: result.insertId });
     } catch (error) { res.status(500).json({ error: 'Erro ao registrar histórico: ' + error.message }); }
 });
