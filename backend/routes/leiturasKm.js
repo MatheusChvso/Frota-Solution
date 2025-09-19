@@ -87,6 +87,17 @@ router.get('/historico', proteger, async (req, res) => {
         lk.id,
         lk.data_leitura,
         lk.km_atual,
+        -- Usa LAG() para pegar o KM da leitura anterior para o mesmo veículo
+        -- Se for a primeira leitura, usa o KM inicial do contrato como base
+        COALESCE(
+          LAG(lk.km_atual, 1) OVER (PARTITION BY a.id_veiculo ORDER BY lk.data_leitura, lk.id),
+          v.km_inicial_contrato
+        ) AS km_anterior,
+        -- Calcula a diferença
+        (lk.km_atual - COALESCE(
+          LAG(lk.km_atual, 1) OVER (PARTITION BY a.id_veiculo ORDER BY lk.data_leitura, lk.id),
+          v.km_inicial_contrato
+        )) AS km_percorridos,
         v.modelo AS veiculo_modelo,
         v.placa AS veiculo_placa,
         vend.nome AS vendedor_nome
@@ -107,5 +118,4 @@ router.get('/historico', proteger, async (req, res) => {
 });
 
 
-module.exports = router;
 module.exports = router;

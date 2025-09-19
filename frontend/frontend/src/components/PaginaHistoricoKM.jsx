@@ -1,4 +1,4 @@
-    // frontend/src/components/PaginaHistoricoKM.jsx
+// frontend/src/components/PaginaHistoricoKM.jsx
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -39,6 +39,8 @@ const PaginaHistoricoKM = () => {
             <th>Placa</th>
             <th>Responsável</th>
             <th>KM Registrado</th>
+            {/* NOVA COLUNA */}
+            <th>KM Percorridos</th> 
           </tr>
         </thead>
         <tbody>
@@ -49,6 +51,10 @@ const PaginaHistoricoKM = () => {
               <td>{leitura.veiculo_placa}</td>
               <td>{leitura.vendedor_nome}</td>
               <td>{leitura.km_atual.toLocaleString()} km</td>
+              {/* NOVO DADO DA COLUNA */}
+              <td style={{ fontWeight: 'bold' }}>
+                {leitura.km_percorridos > 0 ? `${leitura.km_percorridos.toLocaleString()} km` : '---'}
+              </td>
             </tr>
           ))}
         </tbody>

@@ -92,4 +92,45 @@ router.delete('/:id', proteger, async (req, res) => {
   }
 });
 
+router.get('/:id/ultima-leitura', proteger, async (req, res) => {
+  const { id } = req.params; // ID do veículo
+
+  try {
+    // 1. Tenta encontrar a última leitura na tabela de registros
+    const [leituras] = await db.query(
+      `SELECT lk.km_atual
+       FROM leituras_km lk
+       JOIN alocacoes a ON lk.id_alocacao = a.id
+       WHERE a.id_veiculo = ?
+       ORDER BY lk.data_leitura DESC, lk.id DESC
+       LIMIT 1`,
+      [id]
+    );
+
+    if (leituras.length > 0) {
+      // Se encontrou, retorna o valor
+      return res.status(200).json({ ultimaLeitura: leituras[0].km_atual });
+    }
+
+    // 2. Se não encontrou NENHUMA leitura, busca o KM inicial na tabela de veículos
+    const [veiculos] = await db.query(
+      'SELECT km_inicial_contrato FROM veiculos WHERE id = ?',
+      [id]
+    );
+
+    if (veiculos.length > 0) {
+      // Retorna o KM inicial do contrato como a "última leitura"
+      return res.status(200).json({ ultimaLeitura: veiculos[0].km_inicial_contrato || 0 });
+    }
+    
+    // Se não encontrou o veículo, retorna 0
+    res.status(404).json({ ultimaLeitura: 0, message: 'Veículo não encontrado.' });
+
+  } catch (error) {
+    console.error("Erro ao buscar última leitura de KM:", error);
+    res.status(500).json({ error: "Erro interno do servidor." });
+  }
+});
+
+
 module.exports = router;
