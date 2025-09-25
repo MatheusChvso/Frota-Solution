@@ -1,0 +1,39 @@
+/* --- ESTILO DA PÁGINA DE LOGIN --- */
+.login-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+.login-art {
+  width: 60%;
+  /* A MÁGICA ACONTECE AQUI: */
+  background: url('../assets/curinga.png') no-repeat center center;
+  background-size: cover;
+}
+
+.login-form-container {
+  width: 40%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--cor-superficie);
+  padding: 2rem;
+}
+
+.login-form-container form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 1rem;
+}
+
+.public-dashboard-link {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.public-dashboard-link a {
+    color: var(--cor-primaria);
+    text-decoration: none;
+}

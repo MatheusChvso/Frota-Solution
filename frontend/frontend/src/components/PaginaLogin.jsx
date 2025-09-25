@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 // 1. Importar o 'Link' junto com o 'useNavigate'
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-
+import './PaginaLogin.css';
 const PaginaLogin = () => {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');

@@ -1,4 +1,6 @@
-/* frontend/src/App.css */
+/* ==========================================================================
+   ESTILOS GLOBAIS - App.css
+   ========================================================================== */
 
 /* --- LAYOUT E NAVEGAÇÃO --- */
 .main-nav {
@@ -11,6 +13,7 @@
   box-shadow: var(--sombra-padrao);
   border-bottom: 1px solid var(--cor-borda);
 }
+
 .nav-links a {
   text-decoration: none;
   color: var(--cor-texto-secundario);
@@ -18,13 +21,16 @@
   padding: 20px 15px;
   transition: all 0.2s ease-in-out;
 }
+
 .nav-links a:hover {
   color: var(--cor-texto-principal);
 }
+
 .nav-links a.active {
   color: var(--cor-ouro);
   border-bottom: 3px solid var(--cor-ouro);
 }
+
 .nav-user {
   display: flex;
   align-items: center;
@@ -43,7 +49,7 @@ h1, h2, h3 {
 }
 
 /* Formulários e Inputs */
-form {
+form.form-cadastro { /* Adicionando classe para não afetar todos os forms */
   background-color: var(--cor-superficie);
   padding: 20px;
   border-radius: 8px;
@@ -53,6 +59,7 @@ form {
   gap: 15px;
   align-items: center;
 }
+
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -65,8 +72,11 @@ textarea {
   border: 1px solid var(--cor-borda);
   font-size: 1rem;
   flex-grow: 1;
+  width: 100%; /* Garante que o input ocupe o espaço */
+  box-sizing: border-box; /* Evita que o padding estoure o container */
 }
-input:focus, select:focus {
+
+input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--cor-ouro);
   box-shadow: 0 0 0 2px rgba(191, 161, 92, 0.25);
@@ -82,13 +92,16 @@ button {
   cursor: pointer;
   transition: background-color 0.2s;
 }
+
 button[type="submit"] {
   background-color: var(--cor-ouro);
   color: white;
 }
+
 button[type="submit"]:hover {
   background-color: var(--cor-ouro-hover);
 }
+
 .btn-logout {
   background-color: transparent;
   color: var(--cor-texto-principal);
@@ -101,82 +114,56 @@ table {
   border-collapse: collapse;
   background-color: var(--cor-superficie);
   box-shadow: var(--sombra-padrao);
+  border-radius: 8px;
+  overflow: hidden; /* Garante que as bordas arredondadas funcionem */
 }
+
 th, td {
   padding: 12px 15px;
   text-align: left;
   border-bottom: 1px solid var(--cor-borda);
 }
+
 thead tr {
-  background-color: var(--cor-fundo);
+  background-color: #f9fafb; /* Um cinza bem claro para o cabeçalho */
 }
+
 tbody tr:hover {
   background-color: #f1f1f1;
 }
+
 td button {
   margin-right: 5px;
 }
 
 /* Modal */
-.modal-content {
-  background: var(--cor-superficie);
-}
-.modal-content input,
-.modal-content select {
-    width: 100%;
-}
-
-
-/* frontend/src/App.css */
-
-/* --- ESTILOS DO MURAL DA VERGONHA --- */
-.pagina-mural .mural-titulo {
-  text-align: center;
-  margin-bottom: 30px;
-}
-.pagina-mural .mural-titulo h1 {
-  color: var(--cor-vermelho-royal);
-}
-
-.mural-card {
-  border: 2px solid var(--cor-vermelho-royal);
-  border-radius: 8px;
-  padding: 15px;
-  width: 250px;
-  text-align: center;
-  background-color: var(--cor-superficie);
-  box-shadow: var(--sombra-padrao);
-}
-.mural-card img {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid var(--cor-vermelho-royal);
-}
-
-/* --- ESTILO DA PÁGINA DE LOGIN --- */
-.login-container {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-}
-
-.login-art {
-  width: 50%;
-  background: url('https://ae01.alicdn.com/kf/Sc9d88df60706450ba048a44aba5d5742A.jpg') no-repeat center center;
-  background-size: cover;
-}
-
-.login-form-container {
-  width: 50%;
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: var(--cor-superficie);
+  z-index: 1000;
 }
 
-/* Em frontend/src/App.css */
+.modal-content {
+  background: var(--cor-superficie);
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 90%;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
+  width: 100%;
+  margin-bottom: 1rem;
+}
 
 .modal-actions {
   display: flex;
@@ -185,16 +172,18 @@ td button {
   margin-top: 20px;
 }
 
-/* Em frontend/src/App.css */
-.mural-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
+/* Adicione ao seu App.css */
+.btn-export {
+  display: inline-block;
+  padding: 10px 15px;
+  background-color: var(--cor-primaria);
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: background-color 0.2s;
 }
-.mural-card img {
-  border: 3px solid var(--cor-vermelho-royal);
-}
-.mural-card h3 {
-  margin-top: 10px;
+
+.btn-export:hover {
+  background-color: #333; /* Cor um pouco mais escura */
 }

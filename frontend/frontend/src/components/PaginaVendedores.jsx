@@ -14,7 +14,7 @@ const PaginaVendedores = () => {
   const fetchVendedores = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3001/api/vendedores', {
+      const response = await axios.get('http://192.168.17.200:3001/api/vendedores', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setVendedores(response.data);
@@ -37,7 +37,7 @@ const PaginaVendedores = () => {
     try {
       const token = localStorage.getItem('token');
       // 2. Inclui o token na requisição
-      await axios.post('http://localhost:3001/api/vendedores', novoVendedor, {
+      await axios.post('http://192.168.17.200:3001/api/vendedores', novoVendedor, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       alert('Vendedor cadastrado com sucesso!');
@@ -63,7 +63,7 @@ const PaginaVendedores = () => {
     event.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:3001/api/vendedores/${vendedorEditando.id}`, vendedorEditando, {
+      await axios.put(`http://192.168.17.200:3001/api/vendedores/${vendedorEditando.id}`, vendedorEditando, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setIsModalOpen(false);
@@ -82,7 +82,7 @@ const PaginaVendedores = () => {
     if (!idParaDeletar) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:3001/api/vendedores/${idParaDeletar}`, {
+      await axios.delete(`http://192.168.17.200:3001/api/vendedores/${idParaDeletar}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       fetchVendedores();
@@ -97,7 +97,6 @@ const PaginaVendedores = () => {
   // --- JSX (COM FORMULÁRIO COMPLETO) ---
   return (
     <div>
-      <h1>Gerenciar Vendedores</h1>
       <h2>Cadastrar Novo Vendedor</h2>
       <form onSubmit={handleSubmit} className="form-cadastro">
         <input type="text" name="nome" value={novoVendedor.nome} onChange={handleInputChange} placeholder="Nome Completo" required />

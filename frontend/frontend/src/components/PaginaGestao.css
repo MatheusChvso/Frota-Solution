@@ -1,0 +1,67 @@
+/* frontend/src/components/PaginaGestao.css */
+.container-gestao {
+  width: 100%;
+  background-color: var(--cor-superficie);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: var(--sombra-padrao);
+}
+
+.container-gestao h1 {
+  margin-top: 0;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.gestao-nav-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--cor-borda);
+  margin-bottom: 2rem;
+}
+
+.gestao-nav-tabs a {
+  padding: 12px 24px;
+  text-decoration: none;
+  color: var(--cor-texto-secundario);
+  font-weight: 500;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px; /* Alinha a borda de baixo com a borda do container */
+  transition: all 0.2s ease-in-out;
+}
+
+.gestao-nav-tabs a.active {
+  color: var(--cor-primaria);
+  border-bottom-color: var(--cor-primaria);
+}
+
+.gestao-nav-tabs a:hover {
+  background-color: #f5f5f5;
+  color: var(--cor-texto-principal);
+}
+
+.gestao-content {
+  /* O conteúdo da aba será renderizado aqui */
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Estilos para os formulários dentro das abas --- */
+.gestao-content form {
+  /* Seletor agora é genérico para todos os formulários */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  align-items: center;
+}
+
+.gestao-content form button[type="submit"] {
+  flex-basis: 100%; /* Garante que o botão ocupe sua própria linha */
+  margin-top: 1rem; /* Adiciona um espaço acima do botão */
+  max-width: 300px; /* Define uma largura máxima para o botão não ficar muito grande */
+}
+

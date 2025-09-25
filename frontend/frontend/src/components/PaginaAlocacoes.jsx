@@ -21,9 +21,9 @@ const PaginaAlocacoes = () => {
     try {
       // Usamos Promise.all para fazer as 3 chamadas à API em paralelo
       const [resAlocacoes, resVeiculos, resVendedores] = await Promise.all([
-        axios.get('http://localhost:3001/api/alocacoes'),
-        axios.get('http://localhost:3001/api/veiculos'),
-        axios.get('http://localhost:3001/api/vendedores')
+        axios.get('192.168.17.200:3001/api/alocacoes'),
+        axios.get('192.168.17.200:3001/api/veiculos'),
+        axios.get('192.168.17.200:3001/api/vendedores')
       ]);
       setAlocacoes(resAlocacoes.data);
       setVeiculos(resVeiculos.data);
@@ -46,7 +46,7 @@ const PaginaAlocacoes = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      await axios.post('http://localhost:3001/api/alocacoes', novaAlocacao);
+      await axios.post('192.168.17.200:3001/api/alocacoes', novaAlocacao);
       alert('Alocação criada com sucesso!');
       setNovaAlocacao({ id_veiculo: '', id_vendedor: '', data_inicio: new Date().toISOString().split('T')[0] });
       fetchData(); // Re-busca os dados para atualizar a tela
@@ -60,7 +60,7 @@ const PaginaAlocacoes = () => {
     if (window.confirm('Tem certeza que deseja finalizar esta alocação?')) {
       try {
         const data_fim = new Date().toISOString().split('T')[0]; // Data de hoje
-        await axios.put(`http://localhost:3001/api/alocacoes/finalizar/${idAlocacao}`, { data_fim });
+        await axios.put(`192.168.17.200:3001/api/alocacoes/finalizar/${idAlocacao}`, { data_fim });
         alert('Alocação finalizada com sucesso!');
         fetchData(); // Re-busca os dados para atualizar a tela
       } catch (error) {
@@ -75,7 +75,7 @@ const PaginaAlocacoes = () => {
 
   return (
     <div>
-      <h1>Gerenciar Alocações</h1>
+      
       <h2>Nova Alocação</h2>
       <form onSubmit={handleSubmit}>
         <select name="id_veiculo" value={novaAlocacao.id_veiculo} onChange={handleInputChange} required>

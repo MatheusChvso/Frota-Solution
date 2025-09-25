@@ -13,7 +13,7 @@ const PaginaTiposManutencao = () => {
 
   const fetchTipos = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/manutencao/tipos');
+      const response = await axios.get('http://192.168.17.200:3001/api/manutencao/tipos');
       setTipos(response.data);
     } catch (error) {
       console.error("Erro ao buscar tipos de manutenção:", error);
@@ -34,7 +34,7 @@ const PaginaTiposManutencao = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3001/api/manutencao/tipos', novoTipo);
+      await axios.post('http://192.168.17.200:3001/api/manutencao/tipos', novoTipo);
       alert('Tipo de manutenção cadastrado com sucesso!');
       setNovoTipo({ nome: '', intervalo_km_padrao: '', descricao: '' }); // Limpa o formulário
       fetchTipos(); // Atualiza a lista
@@ -47,7 +47,7 @@ const PaginaTiposManutencao = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Tem certeza? Esta ação não pode ser desfeita.')) {
       try {
-        await axios.delete(`http://localhost:3001/api/manutencao/tipos/${id}`);
+        await axios.delete(`http://192.168.17.200:3001/api/manutencao/tipos/${id}`);
         fetchTipos();
       } catch (error) {
         alert(error.response?.data?.error || 'Erro ao excluir tipo.');
@@ -69,7 +69,7 @@ const PaginaTiposManutencao = () => {
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:3001/api/manutencao/tipos/${tipoEditando.id}`, tipoEditando);
+      await axios.put(`http://192.168.17.200:3001/api/manutencao/tipos/${tipoEditando.id}`, tipoEditando);
       setIsModalOpen(false); // Fecha o modal
       setTipoEditando(null); // Limpa o estado de edição
       fetchTipos();          // Atualiza a lista

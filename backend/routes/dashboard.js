@@ -10,6 +10,5 @@ router.get('/geral', dashboardController.getDashboardData);
 router.get('/veiculo/:veiculoId', dashboardController.getDashboardData);
 
 // Rota do mural continua protegida
-router.get('/mural-da-vergonha', proteger, dashboardController.getMuralDaVergonha);
-
+router.get('/status-registros', proteger, dashboardController.getStatusRegistrosDiarios);
 module.exports = router;

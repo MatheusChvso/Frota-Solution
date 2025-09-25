@@ -49,13 +49,38 @@ exports.getDashboardData = async (req, res) => {
   }
 };
 
-exports.getMuralDaVergonha = async (req, res) => {
+exports.getStatusRegistrosDiarios = async (req, res) => {
   try {
-    const query = `SELECT vend.nome, vend.caminho_foto, v.modelo, v.placa FROM alocacoes a JOIN vendedores vend ON a.id_vendedor = vend.id JOIN veiculos v ON a.id_veiculo = v.id WHERE a.data_fim IS NULL AND v.status = 'em_uso' AND a.id NOT IN (SELECT DISTINCT id_alocacao FROM leituras_km WHERE DATE(data_leitura) = CURRENT_DATE);`;
-    const [pendentes] = await pool.query(query);
-    res.status(200).json(pendentes);
+    // Esta query busca todas as alocações ativas e verifica se cada uma
+    // tem um registro correspondente na data de hoje.
+    const query = `
+      SELECT
+        vend.nome,
+        vend.caminho_foto,
+        v.modelo,
+        v.placa,
+        CASE
+          WHEN lk.id_alocacao IS NOT NULL THEN 'Feito'
+          ELSE 'Pendente'
+        END AS status_registro
+      FROM alocacoes a
+      JOIN vendedores vend ON a.id_vendedor = vend.id
+      JOIN veiculos v ON a.id_veiculo = v.id
+      LEFT JOIN (
+        SELECT DISTINCT id_alocacao 
+        FROM leituras_km 
+        WHERE DATE(data_leitura) = CURRENT_DATE
+      ) AS lk ON a.id = lk.id_alocacao
+      WHERE
+        a.data_fim IS NULL AND v.status = 'em_uso'
+      ORDER BY vend.nome;
+    `;
+
+    const [status] = await pool.query(query);
+    res.status(200).json(status);
+
   } catch (error) {
-    console.error("Erro ao buscar dados do Mural da Vergonha:", error);
+    console.error("Erro ao buscar status de registros diários:", error);
     res.status(500).json({ error: "Erro interno do servidor." });
   }
 };
