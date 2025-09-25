@@ -12,7 +12,7 @@ const PaginaMural = () => {
     const fetchStatus = async () => {
       const token = localStorage.getItem('token');
       try {
-        const response = await axios.get('http://localhost:3001/api/dashboard/status-registros', {
+        const response = await axios.get('http://192.168.17.200:3001/api/dashboard/status-registros', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         setRegistros(response.data);

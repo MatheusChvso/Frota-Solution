@@ -24,7 +24,7 @@ const MaintenanceModal = ({ vehicle, tiposManutencao, onClose, onUpdate, token }
     useEffect(() => {
         const fetchHistorico = async () => {
             try {
-                const res = await axios.get(`http://localhost:3001/api/manutencao/historico/${vehicle.id}`, {
+                const res = await axios.get(`http://192.168.17.200:3001/api/manutencao/historico/${vehicle.id}`, {
                     headers: { 'Authorization': `Bearer ${token}` } // Adicionado token
                 });
                 setHistorico(res.data);
@@ -41,7 +41,7 @@ const MaintenanceModal = ({ vehicle, tiposManutencao, onClose, onUpdate, token }
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:3001/api/manutencao/historico', {
+            await axios.post('http://192.168.17.200:3001/api/manutencao/historico', {
                 ...novoRegistro,
                 id_veiculo: vehicle.id
             }, {
@@ -98,8 +98,8 @@ const PaginaManutencao = () => {
         try {
             const config = { headers: { 'Authorization': `Bearer ${token}` } }; // Adicionado token
             const [resFrota, resTipos] = await Promise.all([
-                axios.get('http://localhost:3001/api/manutencao/status-frota', config),
-                axios.get('http://localhost:3001/api/manutencao/tipos', config)
+                axios.get('http://192.168.17.200:3001/api/manutencao/status-frota', config),
+                axios.get('http://192.168.17.200:3001/api/manutencao/tipos', config)
             ]);
             setFrota(resFrota.data);
             setTiposManutencao(resTipos.data);

@@ -1,26 +1,25 @@
-// frontend/src/pages/DashboardConsumo/DashboardConsumo.jsx
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { Link } from 'react-router-dom'; // 1. Importa o Link para navegação
 import axios from 'axios';
-import SaldoVeiculo from '../components/SaldoVeiculo';
+import SaldoVeiculo from './SaldoVeiculo';
+import { AuthContext } from '../context/AuthContext'; // 2. Importa o contexto
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './DashboardConsumo.css';
 
 const DashboardConsumo = () => {
+  const { token } = useContext(AuthContext); // 3. Verifica se o utilizador está logado
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  // Não precisamos mais da lista de veículos, pois a própria tabela servirá como seletor
   const [veiculoSelecionado, setVeiculoSelecionado] = useState('geral');
   const [tituloResumo, setTituloResumo] = useState('Resumo da Frota');
 
   useEffect(() => {
     const fetchData = async () => {
-      // Começa o carregamento sempre que a seleção muda
       setIsLoading(true);
-      
-      const url = `http://localhost:3001/api/dashboard/${veiculoSelecionado === 'geral' ? 'geral' : `veiculo/${veiculoSelecionado}`}`;
+      const url = `http://192.168.17.200:3001/api/dashboard/${veiculoSelecionado === 'geral' ? 'geral' : `veiculo/${veiculoSelecionado}`}`;
 
       try {
+        // A requisição não precisa de token, pois a rota é pública
         const response = await axios.get(url);
         setDashboardData(response.data);
 
@@ -31,7 +30,7 @@ const DashboardConsumo = () => {
         }
       } catch (error) { 
         console.error('Erro ao buscar dados do dashboard:', error);
-        setDashboardData(null); // Limpa os dados em caso de erro
+        setDashboardData(null);
       } finally { 
         setIsLoading(false); 
       }
@@ -39,21 +38,29 @@ const DashboardConsumo = () => {
     fetchData();
   }, [veiculoSelecionado]);
 
-  // Função para mudar a seleção e limpar os dados antigos, forçando o "loading"
   const handleSelectionChange = (id) => {
-    setDashboardData(null); // <-- MUDANÇA IMPORTANTE: limpa dados antigos
+    setDashboardData(null);
     setVeiculoSelecionado(id);
   };
 
-  // Se não houver dados AINDA, mostra o loading.
   if (isLoading || !dashboardData) {
-    return <div className="dashboard-container"><p>Carregando dashboard...</p></div>;
+    return <div className="dashboard-container"><p>A carregar dashboard...</p></div>;
   }
   
   const { resumo, viewData } = dashboardData;
 
   return (
     <div className="dashboard-container">
+      {/* 4. NOVO HEADER COM O BOTÃO CONDICIONAL */}
+      <div className="dashboard-header">
+        <h1>Análise de Saldo de KM</h1>
+        {!token && (
+          <Link to="/login" className="btn-login-header">
+            Fazer Login
+          </Link>
+        )}
+      </div>
+
       <div className="resumo-container">
         <div className="resumo-header">
           <h2>{tituloResumo}</h2>
@@ -72,7 +79,7 @@ const DashboardConsumo = () => {
         )}
       </div>
       
-      {/* A tabela agora só é renderizada na visão geral */}
+      {/* Lógica de renderização condicional */}
       {veiculoSelecionado === 'geral' && viewData ? (
         <table className="tabela-saldos">
           <thead>
@@ -85,7 +92,6 @@ const DashboardConsumo = () => {
           </thead>
           <tbody>
             {viewData.map(veiculo => (
-              // Verificação de segurança para garantir que o objeto é do tipo correto
               veiculo.hasOwnProperty('saldo_km') && (
                 <tr key={veiculo.id} onClick={() => handleSelectionChange(veiculo.id)} className="linha-clicavel">
                   <td>{veiculo.modelo} ({veiculo.placa})</td>
@@ -100,7 +106,6 @@ const DashboardConsumo = () => {
           </tbody>
         </table>
       ) : (
-         // O gráfico agora é renderizado quando um veículo é selecionado
         <div className="grafico-container">
           <h2>Consumo Detalhado (Últimos 30 dias)</h2>
           {viewData && viewData.length > 0 ? (
@@ -124,3 +129,4 @@ const DashboardConsumo = () => {
 };
 
 export default DashboardConsumo;
+

@@ -12,7 +12,7 @@ const PaginaHistoricoKM = () => {
     const fetchHistorico = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:3001/api/leituras-km/historico', {
+        const response = await axios.get('http://192.168.17.200:3001/api/leituras-km/historico', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         setHistorico(response.data);

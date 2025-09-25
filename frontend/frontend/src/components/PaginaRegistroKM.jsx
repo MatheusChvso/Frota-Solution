@@ -16,7 +16,7 @@ const PaginaRegistroKM = () => {
 
   const fetchMeuVeiculo = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/leituras-km/meu-veiculo');
+      const response = await axios.get('http://192.168.17.200:3001/api/leituras-km/meu-veiculo');
       setMeuVeiculo(response.data);
     } catch (err) {
       if (err.response && err.response.status === 404) {
@@ -48,7 +48,7 @@ const PaginaRegistroKM = () => {
         km_atual: parseInt(kmInput, 10),
         data_leitura: dataLeitura
       };
-      await axios.post('http://localhost:3001/api/leituras-km', payload);
+      await axios.post('http://192.168.17.200:3001/api/leituras-km', payload);
       setSuccess('Quilometragem registrada com sucesso!');
       setKmInput(''); // Limpa o input
       fetchMeuVeiculo(); // Re-busca os dados para atualizar a KM na tela

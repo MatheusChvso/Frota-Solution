@@ -20,7 +20,7 @@ const PaginaVeiculos = () => {
 
   const fetchVeiculos = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/veiculos');
+      const response = await axios.get('http://192.168.17.200:3001/api/veiculos');
       setVeiculos(response.data);
     } catch (error) {
       console.error('Erro ao buscar veículos:', error);
@@ -39,7 +39,7 @@ const PaginaVeiculos = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3001/api/veiculos', novoVeiculo);
+      await axios.post('http://192.168.17.200:3001/api/veiculos', novoVeiculo);
       setNovoVeiculo({ placa: '', marca: '', modelo: '', ano: '', km_atual: '', limite_km_mensal: '' });
       fetchVeiculos();
     } catch (error) {
@@ -75,7 +75,7 @@ const handleUpdateSubmit = async (e) => {
     // --- FIM DA CORREÇÃO ---
 
     // Agora enviamos os dados já formatados para a API
-    await axios.put(`http://localhost:3001/api/veiculos/${veiculoEditando.id}`, dadosParaEnviar);
+    await axios.put(`http://192.168.17.200:3001/api/veiculos/${veiculoEditando.id}`, dadosParaEnviar);
     
     setIsModalOpen(false);
     fetchVeiculos();
@@ -96,7 +96,7 @@ const handleUpdateSubmit = async (e) => {
   const handleConfirmarDelete = async () => {
     if (!idParaDeletar) return;
     try {
-      await axios.delete(`http://localhost:3001/api/veiculos/${idParaDeletar}`);
+      await axios.delete(`http://192.168.17.200:3001/api/veiculos/${idParaDeletar}`);
       fetchVeiculos();
     } catch (error) {
       alert(error.response?.data?.error || 'Erro ao excluir veículo.');
