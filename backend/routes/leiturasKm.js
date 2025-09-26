@@ -37,40 +37,35 @@ router.get('/meu-veiculo', proteger, async (req, res) => {
 // Em backend/routes/leiturasKm.js
 
 router.post('/', proteger, async (req, res) => {
-    const idVendedorLogado = req.vendedor.id;
-    const { km_atual, data_leitura } = req.body;
+    const { km_atual, data_leitura, id_alocacao } = req.body; // Recebe o ID da alocação
 
-    if (!km_atual || !data_leitura) {
-        return res.status(400).json({ error: 'KM atual e data são obrigatórios.' });
+    if (!km_atual || !data_leitura || !id_alocacao) {
+        return res.status(400).json({ error: 'KM atual, data e o veículo (alocação) são obrigatórios.' });
     }
 
     try {
-        // 1. Encontrar a alocação ativa do vendedor
-        const [alocacoes] = await db.query('SELECT id, id_veiculo FROM alocacoes WHERE id_vendedor = ? AND data_fim IS NULL', [idVendedorLogado]);
+        // 1. Pega o ID do veículo a partir do ID da alocação para validação
+        const [alocacoes] = await db.query('SELECT id_veiculo FROM alocacoes WHERE id = ?', [id_alocacao]);
         if (alocacoes.length === 0) {
-            return res.status(404).json({ error: 'Você não possui um veículo alocado.' });
+            return res.status(404).json({ error: 'Alocação não encontrada.' });
         }
-        const id_alocacao = alocacoes[0].id;
         const id_veiculo = alocacoes[0].id_veiculo;
 
-        // 2. Buscar dados do veículo, incluindo a data do contrato
+        // 2. Buscar dados do veículo para validação
         const [veiculos] = await db.query('SELECT km_atual, data_inicio_contrato FROM veiculos WHERE id = ?', [id_veiculo]);
         const veiculo = veiculos[0];
 
-        // --- NOVA VALIDAÇÃO ---
-        // 3. Verificar se a data da leitura é anterior ao início do contrato
+        // 3. Validações
         if (veiculo.data_inicio_contrato && new Date(data_leitura) < new Date(veiculo.data_inicio_contrato)) {
             return res.status(400).json({ 
-                error: `A data da leitura (${new Date(data_leitura).toLocaleDateString('pt-BR')}) não pode ser anterior à data de início do contrato (${new Date(veiculo.data_inicio_contrato).toLocaleDateString('pt-BR')}).`
+                error: `A data da leitura não pode ser anterior à data de início do contrato.`
             });
         }
-
-        // 4. Validar se a nova KM é maior que a anterior
         if (parseInt(km_atual, 10) <= veiculo.km_atual) {
             return res.status(400).json({ error: `A nova quilometragem (${km_atual}) deve ser maior que a anterior (${veiculo.km_atual}).` });
         }
 
-        // 5. Inserir a nova leitura
+        // 4. Inserir a nova leitura usando o id_alocacao
         const sql = 'INSERT INTO leituras_km (id_alocacao, km_atual, data_leitura) VALUES (?, ?, ?)';
         await db.query(sql, [id_alocacao, km_atual, data_leitura]);
 

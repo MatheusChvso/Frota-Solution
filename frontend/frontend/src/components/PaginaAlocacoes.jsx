@@ -19,11 +19,15 @@ const PaginaAlocacoes = () => {
   // Função principal para buscar todos os dados necessários para a página
   const fetchData = async () => {
     try {
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: { 'Authorization': `Bearer ${token}` }
+      };
       // Usamos Promise.all para fazer as 3 chamadas à API em paralelo
       const [resAlocacoes, resVeiculos, resVendedores] = await Promise.all([
-        axios.get('192.168.17.200:3001/api/alocacoes'),
-        axios.get('192.168.17.200:3001/api/veiculos'),
-        axios.get('192.168.17.200:3001/api/vendedores')
+        axios.get('http://192.168.17.200:3001/api/alocacoes', config),
+        axios.get('http://192.168.17.200:3001/api/veiculos', config),
+        axios.get('http://192.168.17.200:3001/api/vendedores', config)
       ]);
       setAlocacoes(resAlocacoes.data);
       setVeiculos(resVeiculos.data);
@@ -46,7 +50,10 @@ const PaginaAlocacoes = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      await axios.post('192.168.17.200:3001/api/alocacoes', novaAlocacao);
+      const token = localStorage.getItem('token');
+      await axios.post('http://192.168.17.200:3001/api/alocacoes', novaAlocacao, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       alert('Alocação criada com sucesso!');
       setNovaAlocacao({ id_veiculo: '', id_vendedor: '', data_inicio: new Date().toISOString().split('T')[0] });
       fetchData(); // Re-busca os dados para atualizar a tela
@@ -59,8 +66,11 @@ const PaginaAlocacoes = () => {
   const handleFinalizar = async (idAlocacao) => {
     if (window.confirm('Tem certeza que deseja finalizar esta alocação?')) {
       try {
+        const token = localStorage.getItem('token');
         const data_fim = new Date().toISOString().split('T')[0]; // Data de hoje
-        await axios.put(`192.168.17.200:3001/api/alocacoes/finalizar/${idAlocacao}`, { data_fim });
+        await axios.put(`http://192.168.17.200:3001/api/alocacoes/finalizar/${idAlocacao}`, { data_fim }, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         alert('Alocação finalizada com sucesso!');
         fetchData(); // Re-busca os dados para atualizar a tela
       } catch (error) {

@@ -1,36 +1,40 @@
-// frontend/src/components/PaginaRegistroKM.jsx (VERSÃO REFINADA)
-
+// frontend/src/components/PaginaRegistroKM.jsx (CORRIGIDO PARA MÚLTIPLOS VEÍCULOS)
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
 const PaginaRegistroKM = () => {
-  const { user } = useContext(AuthContext); // Pega o usuário logado do contexto
+  const { user } = useContext(AuthContext);
 
-  const [meuVeiculo, setMeuVeiculo] = useState(null);
+  const [meusVeiculos, setMeusVeiculos] = useState([]); // Agora é um array
+  const [alocacaoSelecionadaId, setAlocacaoSelecionadaId] = useState(''); // Armazena o ID da alocação do veículo selecionado
   const [isLoading, setIsLoading] = useState(true);
   const [kmInput, setKmInput] = useState('');
   const [dataLeitura, setDataLeitura] = useState(new Date().toISOString().split('T')[0]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const fetchMeuVeiculo = async () => {
+  const fetchMeusVeiculos = async () => {
+    setIsLoading(true);
     try {
-      const response = await axios.get('http://192.168.17.200:3001/api/leituras-km/meu-veiculo');
-      setMeuVeiculo(response.data);
-    } catch (err) {
-      if (err.response && err.response.status === 404) {
-        setMeuVeiculo(null); // Usuário não tem veículo alocado
-      } else {
-        setError('Erro ao buscar dados do veículo.');
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://192.168.17.200:3001/api/leituras-km/meu-veiculo', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMeusVeiculos(response.data);
+      // Se houver veículos, pré-seleciona o primeiro
+      if (response.data.length > 0) {
+        setAlocacaoSelecionadaId(response.data[0].id_alocacao);
       }
+    } catch (err) {
+      setError('Erro ao buscar seus veículos.');
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchMeuVeiculo();
+    fetchMeusVeiculos();
   }, []);
 
   const handleSubmit = async (event) => {
@@ -38,25 +42,31 @@ const PaginaRegistroKM = () => {
     setError('');
     setSuccess('');
 
-    if (!kmInput) {
-      setError('Por favor, insira a quilometragem.');
+    if (!alocacaoSelecionadaId) {
+      setError('Por favor, selecione um veículo.');
       return;
     }
 
     try {
+      const token = localStorage.getItem('token');
       const payload = {
         km_atual: parseInt(kmInput, 10),
-        data_leitura: dataLeitura
+        data_leitura: dataLeitura,
+        id_alocacao: alocacaoSelecionadaId // Envia o ID da alocação
       };
-      await axios.post('http://192.168.17.200:3001/api/leituras-km', payload);
+      await axios.post('http://192.168.17.200:3001/api/leituras-km', payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setSuccess('Quilometragem registrada com sucesso!');
       setKmInput(''); // Limpa o input
-      fetchMeuVeiculo(); // Re-busca os dados para atualizar a KM na tela
+      fetchMeusVeiculos(); // Atualiza a lista de veículos com a nova KM
     } catch (err) {
       const errorMessage = err.response?.data?.error || 'Ocorreu um erro ao registrar.';
       setError(errorMessage);
     }
   };
+  
+  const veiculoAtual = meusVeiculos.find(v => v.id_alocacao === alocacaoSelecionadaId);
 
   if (isLoading) {
     return <p>Carregando informações...</p>;
@@ -64,21 +74,41 @@ const PaginaRegistroKM = () => {
 
   return (
     <div>
-      <h1>Minha Página</h1>
-      {/* AJUSTE AQUI para usar optional chaining */}
+      <h1>Registrar KM Diário</h1>
       <p>Bem-vindo, {user?.nome}!</p>
 
-      {meuVeiculo ? (
+      {meusVeiculos.length > 0 ? (
         <div>
-          <h2>Seu Veículo Alocado</h2>
-          <p><strong>Placa:</strong> {meuVeiculo.placa}</p>
-          <p><strong>Modelo:</strong> {meuVeiculo.modelo}</p>
-          <p><strong>Última KM Registrada:</strong> {meuVeiculo.km_atual.toLocaleString('pt-BR')} km</p>
+          {meusVeiculos.length > 1 && (
+            <div style={{marginBottom: '1rem'}}>
+              <label htmlFor="veiculo-select" style={{display: 'block', marginBottom: '0.5rem'}}>Selecione o Veículo:</label>
+              <select 
+                id="veiculo-select"
+                value={alocacaoSelecionadaId}
+                onChange={(e) => setAlocacaoSelecionadaId(e.target.value)}
+              >
+                {meusVeiculos.map(v => (
+                  <option key={v.id_alocacao} value={v.id_alocacao}>
+                    {v.modelo} ({v.placa})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {veiculoAtual && (
+            <div>
+              <h2>Veículo Selecionado</h2>
+              <p><strong>Placa:</strong> {veiculoAtual.placa}</p>
+              <p><strong>Modelo:</strong> {veiculoAtual.modelo}</p>
+              <p><strong>Última KM Registrada:</strong> {veiculoAtual.km_atual.toLocaleString('pt-BR')} km</p>
+            </div>
+          )}
 
           <hr style={{ margin: '20px 0' }} />
 
           <h3>Registrar Nova Quilometragem</h3>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="form-cadastro">
             <input 
               type="number" 
               value={kmInput}
@@ -94,8 +124,8 @@ const PaginaRegistroKM = () => {
             />
             <button type="submit">Registrar</button>
           </form>
-          {error && <p style={{ color: 'red' }}>{error}</p>}
-          {success && <p style={{ color: 'green' }}>{success}</p>}
+          {error && <p style={{ color: 'red', marginTop: '1rem' }}>{error}</p>}
+          {success && <p style={{ color: 'green', marginTop: '1rem' }}>{success}</p>}
         </div>
       ) : (
         <div>

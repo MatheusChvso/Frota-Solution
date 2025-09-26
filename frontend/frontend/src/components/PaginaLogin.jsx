@@ -49,7 +49,7 @@ const PaginaLogin = () => {
 
                     {/* 2. Link para o dashboard público adicionado aqui */}
                     <div style={{ textAlign: 'center', marginTop: '20px' }}>
-                      <Link to="/">Ver Dashboard da Frota</Link>
+                      <Link to="/dashboard">Ver Dashboard da Frota</Link> {/* <--- LINHA CORRIGIDA */}
                     </div>
                     
                 </form>

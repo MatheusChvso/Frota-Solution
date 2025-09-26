@@ -24,13 +24,12 @@ const MainLayout = () => {
     <div>
       <nav className="main-nav">
         <div className="nav-links">
-          {/* Dashboard é a página principal da área logada */}
-          <NavLink to="/app/dashboard">Dashboard</NavLink> 
-          {/* Novo link unificado de "Gestão" */}
+          {/* O link para o dashboard logado agora pode ser só /app ou /app/dashboard */}
+          <NavLink to="/app">Dashboard</NavLink> 
           <NavLink to="/app/gestao">Gestão</NavLink>
           <NavLink to="/app/mural">Checklist Diário</NavLink>
-          {/* Manutenção e Registros podem ser os próximos a serem agrupados */}
           <NavLink to="/app/manutencao">Manutenção</NavLink>
+          <NavLink to="/app/registrar-km">Registrar KM</NavLink>
           <NavLink to="/app/historico-km">Histórico KM</NavLink>
         </div>
         <div className="nav-user">
@@ -40,22 +39,21 @@ const MainLayout = () => {
       </nav>
       <main className="main-content">
         <Routes>
-          <Route path="/dashboard" element={<DashboardConsumo />} />
+          {/* A rota /app agora renderiza o dashboard logado */}
+          <Route index element={<DashboardConsumo />} />
           <Route path="/mural" element={<PaginaMural />} />
           <Route path="/historico-km" element={<PaginaHistoricoKM />} />
           <Route path="/manutencao" element={<PaginaManutencao />} />
           <Route path="/manutencao/tipos" element={<PaginaTiposManutencao />} />
-          {/* Adicionando a nova estrutura de rotas aninhadas para Gestão */}
+          <Route path="/registrar-km" element={<PaginaRegistroKM />} />
           <Route path="/gestao" element={<PaginaGestao />}>
             <Route path="veiculos" element={<PaginaVeiculos />} />
             <Route path="alocacoes" element={<PaginaAlocacoes />} />
             <Route path="vendedores" element={<PaginaVendedores />} />
-            {/* Redireciona para a primeira aba por padrão */}
             <Route index element={<Navigate to="veiculos" replace />} />
           </Route>
           
-          {/* Rota padrão dentro de /app redireciona para o dashboard */}
-          <Route path="*" element={<Navigate to="/app/dashboard" />} />
+          <Route path="*" element={<Navigate to="/app" />} />
         </Routes>
       </main>
     </div>
@@ -67,9 +65,16 @@ function App() {
   return (
     <AuthProvider>
       <Routes>
-        <Route path="/login" element={<PaginaLogin />} />
-        {/* A rota pública para o dashboard agora usa o caminho correto do componente */}
-        <Route path="/" element={<DashboardConsumo />} />
+        {/* ROTA PRINCIPAL: Agora é a página de login */}
+        <Route path="/" element={<PaginaLogin />} />
+        
+        {/* ROTA ANTIGA DE LOGIN: Redireciona para a raiz para evitar duplicidade */}
+        <Route path="/login" element={<Navigate to="/" />} />
+
+        {/* ROTA PÚBLICA: Dashboard público agora fica em /dashboard */}
+        <Route path="/dashboard" element={<DashboardConsumo />} />
+        
+        {/* ROTAS PROTEGIDAS */}
         <Route 
           path="/app/*"
           element={
