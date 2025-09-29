@@ -3,12 +3,12 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { proteger } = require('../middleware/authMiddleware');
+const { proteger, protegerAdmin } = require('../middleware/authMiddleware');
 
 // --- 1. GERENCIAMENTO DE TIPOS DE MANUTENÇÃO ---
 
 // Listar todos os tipos de manutenção
-router.get('/tipos', proteger, async (req, res) => {
+router.get('/tipos', protegerAdmin, async (req, res) => {
   try {
     const [tipos] = await db.query('SELECT * FROM tipos_manutencao ORDER BY nome');
     res.json(tipos);
@@ -18,7 +18,7 @@ router.get('/tipos', proteger, async (req, res) => {
 });
 
 // Criar um novo tipo de manutenção
-router.post('/tipos', proteger, async (req, res) => {
+router.post('/tipos', protegerAdmin, async (req, res) => {
   const { nome, intervalo_km_padrao, descricao } = req.body;
   if (!nome || !intervalo_km_padrao) {
     return res.status(400).json({ error: 'Nome e Intervalo de KM são obrigatórios.' });
@@ -33,7 +33,7 @@ router.post('/tipos', proteger, async (req, res) => {
 });
 
 // Atualizar um tipo de manutenção
-router.put('/tipos/:id', proteger, async (req, res) => {
+router.put('/tipos/:id', protegerAdmin, async (req, res) => {
     const { id } = req.params;
     const { nome, intervalo_km_padrao, descricao } = req.body;
     if (!nome || !intervalo_km_padrao) {
@@ -48,7 +48,7 @@ router.put('/tipos/:id', proteger, async (req, res) => {
 });
 
 // Deletar um tipo de manutenção
-router.delete('/tipos/:id', proteger, async (req, res) => {
+router.delete('/tipos/:id', protegerAdmin, async (req, res) => {
     const { id } = req.params;
     try {
         const [uso] = await db.query('SELECT 1 FROM historico_manutencao WHERE id_tipo_manutencao = ? LIMIT 1', [id]);
@@ -65,7 +65,7 @@ router.delete('/tipos/:id', proteger, async (req, res) => {
 // --- 2. GERENCIAMENTO DO HISTÓRICO DE MANUTENÇÃO ---
 
 // Buscar histórico de um veículo específico
-router.get('/historico/:id_veiculo', proteger, async (req, res) => {
+router.get('/historico/:id_veiculo', protegerAdmin, async (req, res) => {
     try {
         const { id_veiculo } = req.params;
         const sql = `
@@ -81,7 +81,7 @@ router.get('/historico/:id_veiculo', proteger, async (req, res) => {
 });
 
 // Registrar um novo serviço no histórico
-router.post('/historico', proteger, async (req, res) => {
+router.post('/historico', protegerAdmin, async (req, res) => {
     const { id_veiculo, id_tipo_manutencao, data_realizacao, km_realizacao, custo, observacoes } = req.body;
     if (!id_veiculo || !id_tipo_manutencao || !data_realizacao || !km_realizacao) {
         return res.status(400).json({ error: 'Campos obrigatórios não preenchidos.' });
@@ -102,7 +102,7 @@ router.post('/historico', proteger, async (req, res) => {
 // --- 3. ROTA INTELIGENTE: STATUS DE MANUTENÇÃO DA FROTA ---
 
 // Calcular e retornar o status de manutenção de todos os veículos
-router.get('/status-frota', proteger, async (req, res) => {
+router.get('/status-frota', protegerAdmin, async (req, res) => {
     try {
         const [veiculos] = await db.query('SELECT id, modelo, placa, km_atual, km_inicial_contrato FROM veiculos');
         const [tiposManutencao] = await db.query('SELECT * FROM tipos_manutencao');

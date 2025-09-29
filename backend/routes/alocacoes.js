@@ -2,9 +2,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { proteger, protegerAdmin } = require('../middleware/authMiddleware');
 
 // Listar todas as alocações ativas
-router.get('/', async (req, res) => {
+router.get('/', protegerAdmin,  async (req, res) => {
   try {
     const sql = `
       SELECT 
@@ -25,7 +26,7 @@ router.get('/', async (req, res) => {
 });
 
 // Criar uma nova alocação
-router.post('/', async (req, res) => {
+router.post('/', protegerAdmin, async (req, res) => {
   const { id_veiculo, id_vendedor, data_inicio } = req.body;
   if (!id_veiculo || !id_vendedor || !data_inicio) {
     return res.status(400).json({ error: 'Veículo, vendedor e data de início são obrigatórios.' });
@@ -38,7 +39,7 @@ router.post('/', async (req, res) => {
 });
 
 // Finalizar uma alocação (encerrar)
-router.put('/finalizar/:id', async (req, res) => {
+router.put('/finalizar/:id', protegerAdmin, async (req, res) => {
     const { id } = req.params;
     const { data_fim } = req.body;
     if (!data_fim) {

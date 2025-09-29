@@ -5,8 +5,7 @@ const router = express.Router();
 const db = require('../db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { proteger } = require('../middleware/authMiddleware'); // Importamos nosso segurança
-
+const { proteger, protegerAdmin } = require('../middleware/authMiddleware');
 // --- ROTAS PÚBLICAS ---
 
 // Rota de Login (deve ser pública)
@@ -28,7 +27,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Credenciais inválidas.' });
     }
 
-    const payload = { id: vendedor.id, nome: vendedor.nome };
+    const payload = { id: vendedor.id, nome: vendedor.nome, perfil: vendedor.perfil };
     const token = jwt.sign(
       payload,
       process.env.JWT_SECRET,
@@ -44,7 +43,7 @@ router.post('/login', async (req, res) => {
 // --- ROTAS PROTEGIDAS (Apenas para usuários logados) ---
 
 // Listar todos os vendedores
-router.get('/', proteger, async (req, res) => {
+router.get('/', protegerAdmin, async (req, res) => {
     try {
         const [vendedores] = await db.query('SELECT id, nome, email, matricula FROM vendedores ORDER BY nome');
         res.json(vendedores);
@@ -52,7 +51,7 @@ router.get('/', proteger, async (req, res) => {
 });
 
 // Criar um novo vendedor
-router.post('/', proteger, async (req, res) => {
+router.post('/', protegerAdmin, async (req, res) => {    
   const { nome, email, matricula, senha } = req.body;
   if (!nome || !email || !senha) {
     return res.status(400).json({ error: 'Nome, email e senha são obrigatórios.' });
@@ -71,7 +70,7 @@ router.post('/', proteger, async (req, res) => {
 });
 
 // Atualizar um vendedor
-router.put('/:id', proteger, async (req, res) => {
+router.put('/:id', protegerAdmin, async (req, res) => {
   const { id } = req.params;
   const { nome, email, matricula } = req.body;
    if (!nome || !email) {
@@ -86,7 +85,7 @@ router.put('/:id', proteger, async (req, res) => {
 });
 
 // Deletar um vendedor
-router.delete('/:id', proteger, async (req, res) => {
+router.delete('/:id', protegerAdmin, async (req, res) => {
   const { id } = req.params;
   try {
     // Verificação de segurança: checar se o vendedor tem alocações

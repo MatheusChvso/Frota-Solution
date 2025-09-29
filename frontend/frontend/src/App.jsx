@@ -19,18 +19,27 @@ import PaginaHistoricoKM from './components/PaginaHistoricoKM';
 import './App.css';
 
 const MainLayout = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext); // user agora tem user.perfil
   return (
     <div>
       <nav className="main-nav">
         <div className="nav-links">
-          {/* O link para o dashboard logado agora pode ser só /app ou /app/dashboard */}
-          <NavLink to="/app">Dashboard</NavLink> 
-          <NavLink to="/app/gestao">Gestão</NavLink>
-          <NavLink to="/app/mural">Checklist Diário</NavLink>
-          <NavLink to="/app/manutencao">Manutenção</NavLink>
+          <NavLink to="/app">Dashboard</NavLink>
+
+          {/* --- LÓGICA DE EXIBIÇÃO CONDICIONAL --- */}
+          {user?.perfil === 'admin' && (
+            <>
+              <NavLink to="/app/gestao">Gestão</NavLink>
+              <NavLink to="/app/mural">Checklist Diário</NavLink>
+              <NavLink to="/app/manutencao">Manutenção</NavLink>
+              <NavLink to="/app/historico-km">Histórico KM</NavLink>
+            </>
+          )}
+
+          {/* Link que aparece para todos os usuários logados */}
           <NavLink to="/app/registrar-km">Registrar KM</NavLink>
-          <NavLink to="/app/historico-km">Histórico KM</NavLink>
+
+        
         </div>
         <div className="nav-user">
           <span>Olá, {user?.nome}</span>

@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { proteger } = require('../middleware/authMiddleware');
+const { proteger, protegerAdmin } = require('../middleware/authMiddleware');
 
 // ROTA GET: Listar todos os veículos (agora protegida)
-router.get('/', proteger, async (req, res) => {
+router.get('/', protegerAdmin, async (req, res) => {
   try {
     const [veiculos] = await db.query('SELECT * FROM veiculos ORDER BY id DESC');
     res.json(veiculos);
@@ -18,7 +18,7 @@ router.get('/', proteger, async (req, res) => {
 // ========================================================================
 router.get('/alocados', async (req, res) => {
   try {
-    const [veiculos] = await db.query(
+    const [veiculos] = await db.query(  
       "SELECT id, modelo, placa FROM veiculos WHERE status = 'em_uso' ORDER BY modelo"
     );
     res.status(200).json(veiculos);
@@ -30,7 +30,7 @@ router.get('/alocados', async (req, res) => {
 // ========================================================================
 
 // ROTA POST: Criar um novo veículo (protegida)
-router.post('/', proteger, async (req, res) => {
+router.post('/', protegerAdmin, async (req, res) => {
   const { placa, marca, modelo, ano, km_atual, limite_km_mensal, data_inicio_contrato, tempo_contrato_meses, km_inicial_contrato } = req.body;
   if (!placa || !marca || !modelo || !ano) {
     return res.status(400).json({ error: 'Placa, marca, modelo e ano são obrigatórios.' });
@@ -53,7 +53,7 @@ router.post('/', proteger, async (req, res) => {
 });
 
 // ROTA PUT: Atualizar um veículo (protegida)
-router.put('/:id', proteger, async (req, res) => {
+router.put('/:id', protegerAdmin, async (req, res) => {
   const { id } = req.params;
   const { placa, marca, modelo, ano, km_atual, limite_km_mensal, data_inicio_contrato, tempo_contrato_meses, km_inicial_contrato, status } = req.body;
   if (!placa || !marca || !modelo || !ano || !status) {
@@ -78,7 +78,7 @@ router.put('/:id', proteger, async (req, res) => {
 });
 
 // ROTA DELETE: Deletar um veículo (protegida)
-router.delete('/:id', proteger, async (req, res) => {
+router.delete('/:id', protegerAdmin, async (req, res) => {
   const { id } = req.params;
   try {
     const sql = 'DELETE FROM veiculos WHERE id = ?';

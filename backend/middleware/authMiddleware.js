@@ -27,4 +27,19 @@ const proteger = (req, res, next) => {
   }
 };
 
-module.exports = { proteger };
+const protegerAdmin = (req, res, next) => {
+  // Primeiro, executa a proteção normal para garantir que o usuário está logado
+  proteger(req, res, () => {
+    // Depois, verifica se o usuário anexado à requisição tem o perfil de admin
+    if (req.vendedor && req.vendedor.perfil === 'admin') {
+      next(); // Se for admin, pode prosseguir
+    } else {
+      // Se não for admin, retorna um erro de "Não autorizado"
+      res.status(403).json({ error: 'Acesso negado. Rota exclusiva para administradores.' });
+    }
+  });
+};
+
+
+
+module.exports = { proteger, protegerAdmin };
