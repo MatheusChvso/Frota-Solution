@@ -1,4 +1,4 @@
-// frontend/src/components/PaginaRegistroKM.jsx (CORRIGIDO PARA MÚLTIPLOS VEÍCULOS)
+// frontend/src/components/PaginaRegistroKM.jsx (CORRIGIDO)
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
@@ -6,8 +6,8 @@ import { AuthContext } from '../context/AuthContext';
 const PaginaRegistroKM = () => {
   const { user } = useContext(AuthContext);
 
-  const [meusVeiculos, setMeusVeiculos] = useState([]); // Agora é um array
-  const [alocacaoSelecionadaId, setAlocacaoSelecionadaId] = useState(''); // Armazena o ID da alocação do veículo selecionado
+  const [meusVeiculos, setMeusVeiculos] = useState([]);
+  const [alocacaoSelecionadaId, setAlocacaoSelecionadaId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [kmInput, setKmInput] = useState('');
   const [dataLeitura, setDataLeitura] = useState(new Date().toISOString().split('T')[0]);
@@ -22,9 +22,8 @@ const PaginaRegistroKM = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMeusVeiculos(response.data);
-      // Se houver veículos, pré-seleciona o primeiro
       if (response.data.length > 0) {
-        setAlocacaoSelecionadaId(response.data[0].id_alocacao);
+        setAlocacaoSelecionadaId(response.data[0].id_alocacao.toString()); // Garante que o valor inicial seja string
       }
     } catch (err) {
       setError('Erro ao buscar seus veículos.');
@@ -52,21 +51,24 @@ const PaginaRegistroKM = () => {
       const payload = {
         km_atual: parseInt(kmInput, 10),
         data_leitura: dataLeitura,
-        id_alocacao: alocacaoSelecionadaId // Envia o ID da alocação
+        id_alocacao: Number(alocacaoSelecionadaId) // CORREÇÃO: Converte para número antes de enviar
       };
       await axios.post('http://192.168.17.200:3001/api/leituras-km', payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSuccess('Quilometragem registrada com sucesso!');
-      setKmInput(''); // Limpa o input
-      fetchMeusVeiculos(); // Atualiza a lista de veículos com a nova KM
+      setKmInput('');
+      fetchMeusVeiculos();
     } catch (err) {
       const errorMessage = err.response?.data?.error || 'Ocorreu um erro ao registrar.';
       setError(errorMessage);
     }
   };
   
-  const veiculoAtual = meusVeiculos.find(v => v.id_alocacao === alocacaoSelecionadaId);
+  // CORREÇÃO: Converte o ID selecionado (string) para número antes de comparar
+  const veiculoAtual = alocacaoSelecionadaId 
+    ? meusVeiculos.find(v => v.id_alocacao === Number(alocacaoSelecionadaId)) 
+    : null;
 
   if (isLoading) {
     return <p>Carregando informações...</p>;
@@ -88,7 +90,7 @@ const PaginaRegistroKM = () => {
                 onChange={(e) => setAlocacaoSelecionadaId(e.target.value)}
               >
                 {meusVeiculos.map(v => (
-                  <option key={v.id_alocacao} value={v.id_alocacao}>
+                  <option key={v.id_alocacao} value={v.id_alocacao.toString()}>
                     {v.modelo} ({v.placa})
                   </option>
                 ))}
