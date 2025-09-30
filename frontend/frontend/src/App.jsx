@@ -1,41 +1,40 @@
 import React, { useContext } from 'react';
 import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
-import { AuthProvider, AuthContext } from './context/AuthContext.jsx';
+import { AuthProvider, AuthContext } from './context/AuthContext';
 
-// Importação dos componentes de página
-import PaginaGestao from './components/PaginaGestao.jsx'; 
-import DashboardConsumo from './components/DashboardConsumo.jsx';
-import PaginaVeiculos from './components/PaginaVeiculos.jsx';
-import PaginaVendedores from './components/PaginaVendedores.jsx';
-import PaginaAlocacoes from './components/PaginaAlocacoes.jsx';
-import PaginaLogin from './components/PaginaLogin.jsx';
-import RotaProtegida from './components/RotaProtegida.jsx';
-import PaginaRegistroKM from './components/PaginaRegistroKM.jsx';
-import PaginaMural from './components/PaginaMural.jsx';
-import PaginaTiposManutencao from './components/PaginaTiposManutencao.jsx';
-import PaginaManutencao from './components/PaginaManutencao.jsx';
-import PaginaHistoricoKM from './components/PaginaHistoricoKM.jsx';
+// Componentes
+import PaginaGestao from './components/PaginaGestao';
+import DashboardConsumo from './components/DashboardConsumo';
+import PaginaVeiculos from './components/PaginaVeiculos';
+import PaginaVendedores from './components/PaginaVendedores';
+import PaginaAlocacoes from './components/PaginaAlocacoes';
+import PaginaLogin from './components/PaginaLogin';
+import RotaProtegida from './components/RotaProtegida';
+import PaginaRegistroKM from './components/PaginaRegistroKM';
+import PaginaMural from './components/PaginaMural';
+import PaginaTiposManutencao from './components/PaginaTiposManutencao';
+import PaginaManutencao from './components/PaginaManutencao';
+import PaginaHistoricoKM from './components/PaginaHistoricoKM';
 
 import './App.css';
 
-// --- Componente de Layout Principal (Área Logada) ---
 const MainLayout = () => {
   const { user, logout } = useContext(AuthContext);
   return (
     <div>
       <nav className="main-nav">
         <div className="nav-links">
-          {/* Links visíveis para TODOS os usuários logados */}
-          <NavLink to="/app">Dashboard</NavLink> 
+          {/* Links visíveis para todos */}
+          <NavLink to="/app">Dashboard</NavLink>
           <NavLink to="/app/registrar-km">Registar KM</NavLink>
 
-          {/* ===== LÓGICA DE EXIBIÇÃO CONDICIONAL PARA ADMINS ===== */}
-          {/* O bloco abaixo só aparece se o perfil do usuário for 'admin' */}
+          {/* Links visíveis apenas para Administradores */}
           {user?.perfil === 'admin' && (
             <>
               <NavLink to="/app/gestao">Gestão</NavLink>
               <NavLink to="/app/mural">Checklist Diário</NavLink>
-              <NavLink to="/app/manutencao">Manutenção</NavLink>
+              <NavLink to="/app/manutencao">Painel de Manutenção</NavLink>
+              <NavLink to="/app/tipos-manutencao">Tipos de Manutenção</NavLink>
               <NavLink to="/app/historico-km">Histórico KM</NavLink>
             </>
           )}
@@ -47,26 +46,23 @@ const MainLayout = () => {
       </nav>
       <main className="main-content">
         <Routes>
-          {/* A rota /app (índice) renderiza o dashboard */}
+          {/* Rotas Comuns */}
           <Route index element={<DashboardConsumo />} />
+          <Route path="/registrar-km" element={<PaginaRegistroKM />} />
           
-          {/* Rotas comuns a todos os usuários logados */}
-          <Route path="registrar-km" element={<PaginaRegistroKM />} />
-
           {/* Rotas de Admin */}
-          {/* Mesmo que um vendedor tente aceder a estas rotas pela URL, o backend irá bloqueá-lo */}
-          <Route path="mural" element={<PaginaMural />} />
-          <Route path="historico-km" element={<PaginaHistoricoKM />} />
-          <Route path="manutencao" element={<PaginaManutencao />} />
-          <Route path="manutencao/tipos" element={<PaginaTiposManutencao />} />
-          <Route path="gestao" element={<PaginaGestao />}>
+          <Route path="/mural" element={<PaginaMural />} />
+          <Route path="/historico-km" element={<PaginaHistoricoKM />} />
+          <Route path="/manutencao" element={<PaginaManutencao />} />
+          <Route path="/tipos-manutencao" element={<PaginaTiposManutencao />} />
+          
+          <Route path="/gestao" element={<PaginaGestao />}>
             <Route path="veiculos" element={<PaginaVeiculos />} />
             <Route path="alocacoes" element={<PaginaAlocacoes />} />
             <Route path="vendedores" element={<PaginaVendedores />} />
             <Route index element={<Navigate to="veiculos" replace />} />
           </Route>
           
-          {/* Redireciona qualquer outra rota dentro de /app para o dashboard */}
           <Route path="*" element={<Navigate to="/app" />} />
         </Routes>
       </main>
@@ -74,21 +70,14 @@ const MainLayout = () => {
   );
 };
 
-// --- Componente App Principal ---
+// Componente App principal
 function App() {
   return (
     <AuthProvider>
       <Routes>
-        {/* ROTA PRINCIPAL: Página de login */}
         <Route path="/" element={<PaginaLogin />} />
-        
-        {/* ROTA ANTIGA DE LOGIN: Redireciona para a raiz para evitar duplicidade */}
         <Route path="/login" element={<Navigate to="/" />} />
-
-        {/* ROTA PÚBLICA: Dashboard público */}
         <Route path="/dashboard" element={<DashboardConsumo />} />
-        
-        {/* ROTAS PROTEGIDAS: Engloba todo o layout da área logada */}
         <Route 
           path="/app/*"
           element={

@@ -1,5 +1,3 @@
-// frontend/src/components/PaginaMural.jsx
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Paginamural.css';
@@ -53,14 +51,13 @@ const PaginaMural = () => {
               <div key={p.placa} className="checklist-card pendente">
                 <h3>{p.nome}</h3>
                 <p>{p.modelo} ({p.placa})</p>
-                {/* ALTERAÇÃO: Exibe a data do último registo, se existir */}
-                {p.ultima_leitura ? (
-                  <p className="checklist-data">
-                    Último registo: {new Date(p.ultima_leitura).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
-                  </p>
-                ) : (
-                  <p className="checklist-data">Nenhum registo encontrado</p>
-                )}
+                {/* LÓGICA CORRIGIDA PARA PENDENTES */}
+                <p className="checklist-card-data">
+                  {p.data_ultimo_registro
+                    ? `Último registo: ${new Date(p.data_ultimo_registro).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}`
+                    : 'Nenhum registo encontrado'
+                  }
+                </p>
               </div>
             ))}
           </div>
@@ -72,11 +69,13 @@ const PaginaMural = () => {
               <div key={p.placa} className="checklist-card feito">
                 <h3>{p.nome}</h3>
                 <p>{p.modelo} ({p.placa})</p>
-                {p.ultima_leitura && (
-                  <p className="checklist-data">
-                    Registado em: {new Date(p.ultima_leitura).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
-                  </p>
-                )}
+                 {/* LÓGICA CORRIGIDA PARA FEITOS */}
+                <p className="checklist-card-data">
+                  {p.data_ultimo_registro
+                    ? `Registado em: ${new Date(p.data_ultimo_registro).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}`
+                    : ''
+                  }
+                </p>
               </div>
             ))}
           </div>
@@ -87,4 +86,3 @@ const PaginaMural = () => {
 };
 
 export default PaginaMural;
-

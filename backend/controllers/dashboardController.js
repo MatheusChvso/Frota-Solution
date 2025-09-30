@@ -51,38 +51,41 @@ exports.getDashboardData = async (req, res) => {
 
 exports.getStatusRegistrosDiarios = async (req, res) => {
   try {
-    // Esta query busca todas as alocações ativas e verifica se cada uma
-    // tem um registro correspondente na data de hoje.
+    // VERSÃO CORRIGIDA: Esta query agora busca a data do último registo de sempre.
     const query = `
       SELECT
         vend.nome,
         v.modelo,
         v.placa,
-        lk.ultima_leitura, -- Campo novo com a data
+        -- Verifica se a data do último registo é a data de hoje para definir o status
         CASE
-          WHEN lk.id_alocacao IS NOT NULL THEN 'Feito'
+          WHEN DATE(ur.data_ultimo_registro) = CURRENT_DATE THEN 'Feito'
           ELSE 'Pendente'
-        END AS status_registro
+        END AS status_registro,
+        -- Retorna a data do último registo, seja de hoje ou de antes
+        ur.data_ultimo_registro
       FROM alocacoes a
       JOIN vendedores vend ON a.id_vendedor = vend.id
       JOIN veiculos v ON a.id_veiculo = v.id
+      -- Fazemos um LEFT JOIN a uma subconsulta que encontra a data máxima para cada alocação
       LEFT JOIN (
-        -- Subquery para encontrar a leitura mais recente de hoje para cada alocação
-        SELECT id_alocacao, MAX(data_leitura) as ultima_leitura
+        SELECT
+          id_alocacao,
+          MAX(data_leitura) as data_ultimo_registro
         FROM leituras_km
-        WHERE DATE(data_leitura) = CURRENT_DATE
         GROUP BY id_alocacao
-      ) AS lk ON a.id = lk.id_alocacao
+      ) AS ur ON a.id = ur.id_alocacao
       WHERE
         a.data_fim IS NULL AND v.status = 'em_uso'
-      ORDER BY vend.nome;
+      ORDER BY
+        status_registro, ur.data_ultimo_registro DESC, vend.nome;
     `;
 
     const [status] = await pool.query(query);
     res.status(200).json(status);
 
   } catch (error) {
-    console.error("Erro ao buscar status de registros diários:", error);
+    console.error("Erro ao buscar status de registos diários:", error);
     res.status(500).json({ error: "Erro interno do servidor." });
   }
 };
