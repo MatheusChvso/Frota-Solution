@@ -52,3 +52,11 @@
   font-size: 0.9em;
   color: #555;
 }
+
+/* NOVO ESTILO ADICIONADO */
+.checklist-card p.checklist-data {
+  margin-top: 8px;
+  font-size: 0.8em;
+  color: #6c757d; /* cor-texto-secundario */
+  font-style: italic;
+}

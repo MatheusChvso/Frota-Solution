@@ -56,9 +56,9 @@ exports.getStatusRegistrosDiarios = async (req, res) => {
     const query = `
       SELECT
         vend.nome,
-        vend.caminho_foto,
         v.modelo,
         v.placa,
+        lk.ultima_leitura, -- Campo novo com a data
         CASE
           WHEN lk.id_alocacao IS NOT NULL THEN 'Feito'
           ELSE 'Pendente'
@@ -67,9 +67,11 @@ exports.getStatusRegistrosDiarios = async (req, res) => {
       JOIN vendedores vend ON a.id_vendedor = vend.id
       JOIN veiculos v ON a.id_veiculo = v.id
       LEFT JOIN (
-        SELECT DISTINCT id_alocacao 
-        FROM leituras_km 
+        -- Subquery para encontrar a leitura mais recente de hoje para cada alocação
+        SELECT id_alocacao, MAX(data_leitura) as ultima_leitura
+        FROM leituras_km
         WHERE DATE(data_leitura) = CURRENT_DATE
+        GROUP BY id_alocacao
       ) AS lk ON a.id = lk.id_alocacao
       WHERE
         a.data_fim IS NULL AND v.status = 'em_uso'
