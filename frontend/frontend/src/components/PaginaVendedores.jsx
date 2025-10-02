@@ -1,4 +1,4 @@
-// frontend/src/components/PaginaVendedores.jsx
+// frontend/src/components/PaginaVendedores.jsx (VERSÃO FINAL)
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -6,7 +6,8 @@ import { FaPencilAlt, FaTrash } from 'react-icons/fa';
 
 const PaginaVendedores = () => {
   const [vendedores, setVendedores] = useState([]);
-  const [novoVendedor, setNovoVendedor] = useState({ nome: '', email: '', matricula: '', senha: '' });
+  // ALTERAÇÃO: Adicionado 'perfil' ao estado inicial
+  const [novoVendedor, setNovoVendedor] = useState({ nome: '', email: '', matricula: '', senha: '', perfil: 'vendedor' });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [vendedorEditando, setVendedorEditando] = useState(null);
   const [idParaDeletar, setIdParaDeletar] = useState(null);
@@ -23,34 +24,28 @@ const PaginaVendedores = () => {
 
   useEffect(() => { fetchVendedores(); }, []);
 
-  // --- FUNÇÕES PREENCHIDAS ---
-
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setNovoVendedor({ ...novoVendedor, [name]: value });
   };
 
   const handleSubmit = async (event) => {
-    // 1. Previne o refresh da página
-    event.preventDefault(); 
-    
+    event.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      // 2. Inclui o token na requisição
       await axios.post('http://192.168.17.200:3001/api/vendedores', novoVendedor, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       alert('Vendedor cadastrado com sucesso!');
-      setNovoVendedor({ nome: '', email: '', matricula: '', senha: '' }); // Limpa o formulário
-      fetchVendedores(); // Atualiza a lista
+      setNovoVendedor({ nome: '', email: '', matricula: '', senha: '', perfil: 'vendedor' });
+      fetchVendedores();
     } catch (error) {
       alert(error.response?.data?.error || 'Erro ao cadastrar vendedor.');
-      console.error('Erro ao cadastrar vendedor:', error);
     }
   };
 
   const handleEdit = (vendedor) => {
-    setVendedorEditando({ ...vendedor }); // Copia os dados para o estado de edição
+    setVendedorEditando({ ...vendedor });
     setIsModalOpen(true);
   };
 
@@ -70,7 +65,6 @@ const PaginaVendedores = () => {
       fetchVendedores();
     } catch (error) {
       alert(error.response?.data?.error || 'Erro ao atualizar vendedor.');
-      console.error('Erro ao atualizar vendedor:', error);
     }
   };
 
@@ -88,13 +82,11 @@ const PaginaVendedores = () => {
       fetchVendedores();
     } catch (error) {
       alert(error.response?.data?.error || 'Erro ao excluir vendedor.');
-      console.error('Erro ao excluir vendedor:', error);
     } finally {
       setIdParaDeletar(null);
     }
   };
 
-  // --- JSX (COM FORMULÁRIO COMPLETO) ---
   return (
     <div>
       <h2>Cadastrar Novo Vendedor</h2>
@@ -103,6 +95,11 @@ const PaginaVendedores = () => {
         <input type="email" name="email" value={novoVendedor.email} onChange={handleInputChange} placeholder="Email" required />
         <input type="text" name="matricula" value={novoVendedor.matricula} onChange={handleInputChange} placeholder="Matrícula (opcional)" />
         <input type="password" name="senha" value={novoVendedor.senha} onChange={handleInputChange} placeholder="Senha" required />
+        {/* ALTERAÇÃO: Adicionado seletor de perfil */}
+        <select name="perfil" value={novoVendedor.perfil} onChange={handleInputChange}>
+            <option value="vendedor">Vendedor</option>
+            <option value="admin">Administrador</option>
+        </select>
         <button type="submit">Cadastrar Vendedor</button>
       </form>
 
@@ -111,12 +108,15 @@ const PaginaVendedores = () => {
       <h2>Vendedores Cadastrados</h2>
       <table>
         <thead>
-          <tr><th>Nome</th><th>Email</th><th>Matrícula</th><th>Ações</th></tr>
+          {/* ALTERAÇÃO: Adicionada coluna de Perfil */}
+          <tr><th>Nome</th><th>Email</th><th>Matrícula</th><th>Perfil</th><th>Ações</th></tr>
         </thead>
         <tbody>
           {vendedores.map((vendedor) => (
             <tr key={vendedor.id}>
               <td>{vendedor.nome}</td><td>{vendedor.email}</td><td>{vendedor.matricula}</td>
+              {/* ALTERAÇÃO: Exibição do perfil */}
+              <td>{vendedor.perfil}</td>
               <td>
                 <button onClick={() => handleEdit(vendedor)}><FaPencilAlt /></button>
                 <button onClick={() => handleAbrirConfirmacaoDelete(vendedor.id)} style={{backgroundColor: 'var(--cor-vermelho-royal)', color: 'white'}}><FaTrash /></button>
@@ -133,7 +133,13 @@ const PaginaVendedores = () => {
             <form onSubmit={handleUpdateSubmit}>
               <label>Nome:</label><input type="text" name="nome" value={vendedorEditando.nome} onChange={handleModalChange} required />
               <label>Email:</label><input type="email" name="email" value={vendedorEditando.email} onChange={handleModalChange} required />
-              <label>Matrícula:</label><input type="text" name="matricula" value={vendedorEditando.matricula} onChange={handleModalChange} />
+              <label>Matrícula:</label><input type="text" name="matricula" value={vendedorEditando.matricula || ''} onChange={handleModalChange} />
+              {/* ALTERAÇÃO: Adicionado seletor de perfil no modal de edição */}
+              <label>Perfil:</label>
+              <select name="perfil" value={vendedorEditando.perfil} onChange={handleModalChange} required>
+                <option value="vendedor">Vendedor</option>
+                <option value="admin">Administrador</option>
+              </select>
               <div className="modal-actions">
                 <button type="button" onClick={() => setIsModalOpen(false)}>Cancelar</button>
                 <button type="submit">Salvar Alterações</button>

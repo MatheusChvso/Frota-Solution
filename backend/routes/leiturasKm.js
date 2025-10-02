@@ -75,21 +75,20 @@ router.post('/', proteger, async (req, res) => {
 });
 
 
-// Rota de histórico (sem alteração)
+// Rota de histórico (COM A LÓGICA DE KM PERCORRIDOS CORRIGIDA)
 router.get('/historico', proteger, async (req, res) => {
   try {
     const query = `
       SELECT
-        lk.id, lk.data_leitura, lk.km_atual,
-        COALESCE(
-          LAG(lk.km_atual, 1) OVER (PARTITION BY a.id_veiculo ORDER BY lk.data_leitura, lk.id),
-          v.km_inicial_contrato
-        ) AS km_anterior,
-        (lk.km_atual - COALESCE(
-          LAG(lk.km_atual, 1) OVER (PARTITION BY a.id_veiculo ORDER BY lk.data_leitura, lk.id),
-          v.km_inicial_contrato
-        )) AS km_percorridos,
-        v.modelo AS veiculo_modelo, v.placa AS veiculo_placa, vend.nome AS vendedor_nome
+        lk.id,
+        lk.data_leitura,
+        lk.km_atual,
+        LAG(lk.km_atual, 1) OVER (PARTITION BY a.id_veiculo ORDER BY lk.data_leitura, lk.id) AS km_anterior,
+        -- Calcula a diferença apenas entre leituras consecutivas. A primeira será NULL.
+        (lk.km_atual - LAG(lk.km_atual, 1) OVER (PARTITION BY a.id_veiculo ORDER BY lk.data_leitura, lk.id)) AS km_percorridos,
+        v.modelo AS veiculo_modelo,
+        v.placa AS veiculo_placa,
+        vend.nome AS vendedor_nome
       FROM leituras_km lk
       JOIN alocacoes a ON lk.id_alocacao = a.id
       JOIN veiculos v ON a.id_veiculo = v.id

@@ -1,13 +1,13 @@
-// backend/routes/vendedores.js (VERSÃO CORRIGIDA E REFINADA)
+// backend/routes/vendedores.js (VERSÃO FINAL COM GESTÃO DE PERFIL)
 
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { proteger, protegerAdmin } = require('../middleware/authMiddleware'); // Importamos a proteção de admin
+const { proteger, protegerAdmin } = require('../middleware/authMiddleware');
 
-// Rota de Login (COM A CORREÇÃO DO PERFIL)
+// Rota de Login (sem alteração)
 router.post('/login', async (req, res) => {
   const { email, senha } = req.body;
   if (!email || !senha) {
@@ -15,7 +15,6 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    // A query `SELECT *` já inclui a nova coluna 'perfil'
     const [vendedores] = await db.query('SELECT * FROM vendedores WHERE email = ?', [email]);
     if (vendedores.length === 0) {
       return res.status(401).json({ error: 'Credenciais inválidas.' });
@@ -27,45 +26,43 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Credenciais inválidas.' });
     }
 
-    // --- CORREÇÃO APLICADA AQUI ---
-    // Adicionamos o 'perfil' ao payload do token e ao objeto de utilizador
+    // Adiciona o perfil ao token
     const payload = { id: vendedor.id, nome: vendedor.nome, perfil: vendedor.perfil };
-    
     const token = jwt.sign(
       payload,
       process.env.JWT_SECRET,
       { expiresIn: '8h' }
     );
     
-    // Retornamos o objeto de utilizador completo, incluindo o perfil
     res.json({ message: 'Login bem-sucedido!', token: token, user: payload });
-
   } catch (error) {
     res.status(500).json({ error: 'Erro no servidor durante o login: ' + error.message });
   }
 });
 
-// --- ROTAS PROTEGIDAS (Apenas para administradores) ---
+// --- ROTAS PROTEGIDAS ---
 
-// Listar todos os vendedores
+// Listar todos os vendedores (agora retorna o perfil)
 router.get('/', protegerAdmin, async (req, res) => {
     try {
+        // ALTERAÇÃO: Adicionado o campo 'perfil' na consulta
         const [vendedores] = await db.query('SELECT id, nome, email, matricula, perfil FROM vendedores ORDER BY nome');
         res.json(vendedores);
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// Criar um novo vendedor
+// Criar um novo vendedor (agora aceita o perfil)
 router.post('/', protegerAdmin, async (req, res) => {
-  const { nome, email, matricula, senha, perfil } = req.body; // Adicionado 'perfil'
-  if (!nome || !email || !senha) {
-    return res.status(400).json({ error: 'Nome, email e senha são obrigatórios.' });
+  // ALTERAÇÃO: Adicionado 'perfil'
+  const { nome, email, matricula, senha, perfil } = req.body;
+  if (!nome || !email || !senha || !perfil) {
+    return res.status(400).json({ error: 'Nome, email, senha e perfil são obrigatórios.' });
   }
   try {
     const senhaHash = await bcrypt.hash(senha, 10);
-    // Incluímos o 'perfil' no INSERT (com um valor padrão 'vendedor' se não for fornecido)
+    // ALTERAÇÃO: Adicionado 'perfil' ao INSERT
     const sql = 'INSERT INTO vendedores (nome, email, matricula, senha, perfil) VALUES (?, ?, ?, ?, ?)';
-    const [result] = await db.query(sql, [nome, email, matricula, senhaHash, perfil || 'vendedor']);
+    const [result] = await db.query(sql, [nome, email, matricula, senhaHash, perfil]);
     res.status(201).json({ message: 'Vendedor criado com sucesso!', id: result.insertId });
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {
@@ -75,22 +72,24 @@ router.post('/', protegerAdmin, async (req, res) => {
   }
 });
 
-// Atualizar um vendedor
+// Atualizar um vendedor (agora aceita o perfil)
 router.put('/:id', protegerAdmin, async (req, res) => {
   const { id } = req.params;
-  const { nome, email, matricula, perfil } = req.body; // Adicionado 'perfil'
-   if (!nome || !email) {
-        return res.status(400).json({ error: 'Nome e email são obrigatórios.' });
+  // ALTERAÇÃO: Adicionado 'perfil'
+  const { nome, email, matricula, perfil } = req.body;
+   if (!nome || !email || !perfil) {
+        return res.status(400).json({ error: 'Nome, email e perfil são obrigatórios.' });
     }
   try {
+    // ALTERAÇÃO: Adicionado 'perfil' ao UPDATE
     const sql = 'UPDATE vendedores SET nome = ?, email = ?, matricula = ?, perfil = ? WHERE id = ?';
-    const [result] = await db.query(sql, [nome, email, matricula, perfil || 'vendedor', id]);
+    const [result] = await db.query(sql, [nome, email, matricula, perfil, id]);
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Vendedor não encontrado' });
     res.json({ message: 'Vendedor atualizado!' });
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// Deletar um vendedor
+// Deletar um vendedor (sem alteração)
 router.delete('/:id', protegerAdmin, async (req, res) => {
   const { id } = req.params;
   try {
@@ -98,12 +97,11 @@ router.delete('/:id', protegerAdmin, async (req, res) => {
     if (alocacoes.length > 0) {
         return res.status(400).json({ error: 'Não é possível excluir. Este vendedor possui veículos alocados em seu histórico.' });
     }
-
     const [result] = await db.query('DELETE FROM vendedores WHERE id = ?', [id]);
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Vendedor não encontrado' });
     res.json({ message: 'Vendedor deletado!' });
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-
 module.exports = router;
+

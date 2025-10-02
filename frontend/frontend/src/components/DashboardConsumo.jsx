@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Link } from 'react-router-dom'; // 1. Importa o Link para navegação
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import SaldoVeiculo from './SaldoVeiculo';
-import { AuthContext } from '../context/AuthContext'; // 2. Importa o contexto
+import { AuthContext } from '../context/AuthContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './DashboardConsumo.css';
 
 const DashboardConsumo = () => {
-  const { token } = useContext(AuthContext); // 3. Verifica se o utilizador está logado
+  const { token } = useContext(AuthContext);
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [veiculoSelecionado, setVeiculoSelecionado] = useState('geral');
@@ -19,7 +19,6 @@ const DashboardConsumo = () => {
       const url = `http://192.168.17.200:3001/api/dashboard/${veiculoSelecionado === 'geral' ? 'geral' : `veiculo/${veiculoSelecionado}`}`;
 
       try {
-        // A requisição não precisa de token, pois a rota é pública
         const response = await axios.get(url);
         setDashboardData(response.data);
 
@@ -51,11 +50,10 @@ const DashboardConsumo = () => {
 
   return (
     <div className="dashboard-container">
-      {/* 4. NOVO HEADER COM O BOTÃO CONDICIONAL */}
       <div className="dashboard-header">
         <h1>Análise de Saldo de KM</h1>
         {!token && (
-          <Link to="/login" className="btn-login-header">
+          <Link to="/" className="btn-login-header">
             Fazer Login
           </Link>
         )}
@@ -72,14 +70,13 @@ const DashboardConsumo = () => {
         </div>
         {resumo && (
           <div className="resumo-grid">
-            <div className="resumo-card"><h3>Consumo Hoje</h3><p>{resumo.consumoDia.toLocaleString()} km</p></div>
-            <div className="resumo-card"><h3>Consumo no Mês</h3><p>{resumo.consumoMes.toLocaleString()} km</p></div>
-            <div className="resumo-card"><h3>Limite Total do Contrato</h3><p>{resumo.limiteTotalContrato.toLocaleString()} km</p></div>
+            <div className="resumo-card"><h3>Consumo Hoje</h3><p>{(resumo.consumoDia || 0).toLocaleString()} km</p></div>
+            <div className="resumo-card"><h3>Consumo no Mês</h3><p>{(resumo.consumoMes || 0).toLocaleString()} km</p></div>
+            <div className="resumo-card"><h3>Limite Total do Contrato</h3><p>{(resumo.limiteTotalContrato || 0).toLocaleString()} km</p></div>
           </div>
         )}
       </div>
       
-      {/* Lógica de renderização condicional */}
       {veiculoSelecionado === 'geral' && viewData ? (
         <table className="tabela-saldos">
           <thead>
@@ -92,13 +89,15 @@ const DashboardConsumo = () => {
           </thead>
           <tbody>
             {viewData.map(veiculo => (
-              veiculo.hasOwnProperty('saldo_km') && (
+              // Verificação robusta para garantir que o objeto e a propriedade existem
+              veiculo && typeof veiculo.saldo_km !== 'undefined' && (
                 <tr key={veiculo.id} onClick={() => handleSelectionChange(veiculo.id)} className="linha-clicavel">
                   <td>{veiculo.modelo} ({veiculo.placa})</td>
                   <td>{veiculo.responsavel || 'N/A'}</td>
                   <td><SaldoVeiculo veiculo={veiculo} /></td>
-                  <td style={{ color: veiculo.saldo_km < 0 ? '#f44336' : '#4caf50', fontWeight: 'bold' }}>
-                    {veiculo.saldo_km.toLocaleString()}
+                  {/* CORREÇÃO: Usar (veiculo.saldo_km || 0) para evitar erros com nulos */}
+                  <td style={{ color: (veiculo.saldo_km || 0) < 0 ? '#f44336' : '#4caf50', fontWeight: 'bold' }}>
+                    {(veiculo.saldo_km || 0).toLocaleString()}
                   </td>
                 </tr>
               )
@@ -129,4 +128,3 @@ const DashboardConsumo = () => {
 };
 
 export default DashboardConsumo;
-
