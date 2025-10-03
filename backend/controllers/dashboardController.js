@@ -95,22 +95,28 @@ exports.getDashboardData = async (req, res) => {
       ORDER BY saldo_km ASC;
     ` : `SELECT 1;`;
     
-    const queryLeiturasGrafico = veiculoId ? `SELECT lk.data_leitura, lk.km_atual, COALESCE(LAG(lk.km_atual, 1) OVER (PARTITION BY a.id_veiculo ORDER BY lk.data_leitura), v.km_inicial_contrato) AS km_anterior FROM leituras_km lk JOIN alocacoes a ON lk.id_alocacao = a.id JOIN veiculos v ON a.id_veiculo = v.id WHERE lk.data_leitura >= CURDATE() - INTERVAL 30 DAY ${andAlocacaoVeiculo} ORDER BY lk.data_leitura ASC;` : `SELECT 1;`;
+    const queryLeiturasGrafico = veiculoId ? `SELECT lk.data_leitura, lk.km_atual, COALESCE(LAG(lk.km_atual, 1) OVER (PARTITION BY a.id_veiculo ORDER BY lk.data_leitura, lk.id), v.km_inicial_contrato) AS km_anterior FROM leituras_km lk JOIN alocacoes a ON lk.id_alocacao = a.id JOIN veiculos v ON a.id_veiculo = v.id WHERE lk.data_leitura >= CURDATE() - INTERVAL 30 DAY ${andAlocacaoVeiculo} ORDER BY lk.data_leitura ASC;` : `SELECT 1;`;
     const queryInfoVeiculo = veiculoId ? `SELECT v.modelo, v.placa, vend.nome AS nomeVendedor FROM veiculos v JOIN alocacoes a ON v.id = a.id_veiculo JOIN vendedores vend ON a.id_vendedor = vend.id WHERE a.id_veiculo = ? AND a.data_fim IS NULL LIMIT 1;` : `SELECT 1;`;
 
-    const [
-      [[resumoHoje]], [[resumoMes]], [[limiteTotal]], [saldos], [leiturasGrafico], [[infoVeiculo]]
-    ] = await Promise.all([
-      pool.query(queryConsumoHoje, veiculoId ? [veiculoId, veiculoId] : []),
-      pool.query(queryConsumoMes, veiculoId ? [veiculoId, veiculoId] : []),
+    // A desestruturação dos resultados foi tornada mais segura
+    const promises = await Promise.all([
+      pool.query(queryConsumoHoje, veiculoId ? [veiculoId, veiculoId, veiculoId] : []),
+      pool.query(queryConsumoMes, veiculoId ? [veiculoId, veiculoId, veiculoId] : []),
       pool.query(queryLimiteTotal, params),
       pool.query(querySaldos),
       pool.query(queryLeiturasGrafico, params),
       pool.query(queryInfoVeiculo, params)
     ]);
+
+    const resumoHoje = promises[0][0][0];
+    const resumoMes = promises[1][0][0];
+    const limiteTotal = promises[2][0][0];
+    const saldos = promises[3][0];
+    const leiturasGrafico = promises[4][0];
+    const infoVeiculo = promises[5][0][0];
     
     const consumoPorDia = {};
-    if (veiculoId && leiturasGrafico.length > 0 && leiturasGrafico[0] && leiturasGrafico[0].km_atual) {
+    if (veiculoId && leiturasGrafico && leiturasGrafico.length > 0) {
       for (const leitura of leiturasGrafico) {
         if (leitura && leitura.km_atual != null && leitura.km_anterior != null) {
           const dia = new Date(leitura.data_leitura).toISOString().split('T')[0];
@@ -170,4 +176,3 @@ exports.getStatusRegistrosDiarios = async (req, res) => {
     res.status(500).json({ error: "Erro interno do servidor." });
   }
 };
-

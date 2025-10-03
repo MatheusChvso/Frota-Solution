@@ -2,7 +2,6 @@ import React, { useContext } from 'react';
 import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 
-// Componentes
 import PaginaGestao from './components/PaginaGestao';
 import DashboardConsumo from './components/DashboardConsumo';
 import PaginaVeiculos from './components/PaginaVeiculos';
@@ -15,6 +14,8 @@ import PaginaMural from './components/PaginaMural';
 import PaginaTiposManutencao from './components/PaginaTiposManutencao';
 import PaginaManutencao from './components/PaginaManutencao';
 import PaginaHistoricoKM from './components/PaginaHistoricoKM';
+// 1. Importar o novo componente
+import PaginaHistoricoAlocacao from './components/PaginaHistoricoAlocacao';
 
 import './App.css';
 
@@ -24,20 +25,22 @@ const MainLayout = () => {
     <div>
       <nav className="main-nav">
         <div className="nav-links">
-          {/* Links visíveis para todos */}
           <NavLink to="/app">Dashboard</NavLink>
-          <NavLink to="/app/registrar-km">Registar KM</NavLink>
-
-          {/* Links visíveis apenas para Administradores */}
+          
           {user?.perfil === 'admin' && (
             <>
               <NavLink to="/app/gestao">Gestão</NavLink>
               <NavLink to="/app/mural">Checklist Diário</NavLink>
-              <NavLink to="/app/manutencao">Painel de Manutenção</NavLink>
+              <NavLink to="/app/manutencao">Manutenção</NavLink>
               <NavLink to="/app/tipos-manutencao">Tipos de Manutenção</NavLink>
               <NavLink to="/app/historico-km">Histórico KM</NavLink>
+              {/* 2. Adicionar o novo link ao menu do admin */}
+              <NavLink to="/app/historico-alocacoes">Histórico Alocações</NavLink>
             </>
           )}
+          
+          <NavLink to="/app/registrar-km">Registrar KM</NavLink>
+
         </div>
         <div className="nav-user">
           <span>Olá, {user?.nome}</span>
@@ -46,16 +49,16 @@ const MainLayout = () => {
       </nav>
       <main className="main-content">
         <Routes>
-          {/* Rotas Comuns */}
           <Route index element={<DashboardConsumo />} />
-          <Route path="/registrar-km" element={<PaginaRegistroKM />} />
-          
-          {/* Rotas de Admin */}
           <Route path="/mural" element={<PaginaMural />} />
           <Route path="/historico-km" element={<PaginaHistoricoKM />} />
           <Route path="/manutencao" element={<PaginaManutencao />} />
           <Route path="/tipos-manutencao" element={<PaginaTiposManutencao />} />
+          <Route path="/registrar-km" element={<PaginaRegistroKM />} />
           
+          {/* 3. Adicionar a nova rota */}
+          <Route path="/historico-alocacoes" element={<PaginaHistoricoAlocacao />} />
+
           <Route path="/gestao" element={<PaginaGestao />}>
             <Route path="veiculos" element={<PaginaVeiculos />} />
             <Route path="alocacoes" element={<PaginaAlocacoes />} />
@@ -78,6 +81,7 @@ function App() {
         <Route path="/" element={<PaginaLogin />} />
         <Route path="/login" element={<Navigate to="/" />} />
         <Route path="/dashboard" element={<DashboardConsumo />} />
+        
         <Route 
           path="/app/*"
           element={

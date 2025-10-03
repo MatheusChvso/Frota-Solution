@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api'; // Usa o novo ficheiro central
 import './Paginamural.css';
 
 const PaginaMural = () => {
@@ -8,11 +8,9 @@ const PaginaMural = () => {
 
   useEffect(() => {
     const fetchStatus = async () => {
-      const token = localStorage.getItem('token');
       try {
-        const response = await axios.get('http://192.168.17.200:3001/api/dashboard/status-registros', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // Agora a chamada é mais limpa, sem precisar de configurar cabeçalhos
+        const response = await api.get('/dashboard/status-registros');
         setRegistros(response.data);
       } catch (error) {
         console.error('Erro ao buscar status de registos:', error);
@@ -86,3 +84,4 @@ const PaginaMural = () => {
 };
 
 export default PaginaMural;
+
