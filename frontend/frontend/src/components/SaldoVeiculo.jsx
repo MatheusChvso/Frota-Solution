@@ -1,10 +1,24 @@
 import React from 'react';
-import './SaldoVeiculo.css'; // Importa o arquivo CSS
+import './SaldoVeiculo.css'; // Importa o ficheiro CSS
 
 const SaldoVeiculo = ({ veiculo }) => {
-  const { consumo_real_total, meta_cumulativa, saldo_km } = veiculo;
+  const { consumo_real_total, meta_cumulativa } = veiculo;
 
-  const percentage = meta_cumulativa > 0 ? (consumo_real_total / meta_cumulativa) * 100 : 0;
+  // Se a meta for 0 ou não existir, exibe a barra desativada com um aviso
+  if (!meta_cumulativa || meta_cumulativa <= 0) {
+    return (
+      <div className="saldo-veiculo-container">
+        <div className="saldo-info-text-vazio">
+          <span>Meta não definida</span>
+        </div>
+        <div className="saldo-progress-bar-container">
+          <div className="saldo-progress-bar-filler-vazio" />
+        </div>
+      </div>
+    );
+  }
+
+  const percentage = (consumo_real_total / meta_cumulativa) * 100;
   
   let barColor = '#4caf50'; // Verde
   if (percentage > 85) barColor = '#ff9800'; // Laranja
@@ -31,3 +45,4 @@ const SaldoVeiculo = ({ veiculo }) => {
 };
 
 export default SaldoVeiculo;
+

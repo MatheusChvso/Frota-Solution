@@ -1,7 +1,5 @@
-// frontend/src/components/PaginaAlocacoes.jsx (COM URLs CORRIGIDAS)
-
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api'; // Usar o ficheiro central
 
 const PaginaAlocacoes = () => {
   const [alocacoes, setAlocacoes] = useState([]);
@@ -15,14 +13,10 @@ const PaginaAlocacoes = () => {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const config = { headers: { 'Authorization': `Bearer ${token}` } };
-
       const [resAlocacoes, resVeiculos, resVendedores] = await Promise.all([
-        // CORREÇÃO APLICADA AQUI
-        axios.get('http://192.168.17.200:3001/api/alocacoes', config),
-        axios.get('http://192.168.17.200:3001/api/veiculos', config),
-        axios.get('http://192.168.17.200:3001/api/vendedores', config)
+        api.get('/alocacoes'),
+        api.get('/veiculos'),
+        api.get('/vendedores')
       ]);
       setAlocacoes(resAlocacoes.data);
       setVeiculos(resVeiculos.data);
@@ -44,11 +38,7 @@ const PaginaAlocacoes = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      // CORREÇÃO APLICADA AQUI
-      await axios.post('http://192.168.17.200:3001/api/alocacoes', novaAlocacao, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      await api.post('/alocacoes', novaAlocacao);
       alert('Alocação criada com sucesso!');
       setNovaAlocacao({ id_veiculo: '', id_vendedor: '', data_inicio: new Date().toISOString().split('T')[0] });
       fetchData();
@@ -59,14 +49,10 @@ const PaginaAlocacoes = () => {
   };
 
   const handleFinalizar = async (idAlocacao) => {
-    if (window.confirm('Tem certeza que deseja finalizar esta alocação?')) {
+    if (window.confirm('Tem a certeza de que deseja finalizar esta alocação?')) {
       try {
-        const token = localStorage.getItem('token');
         const data_fim = new Date().toISOString().split('T')[0];
-        // CORREÇÃO APLICADA AQUI
-        await axios.put(`http://192.168.17.200:3001/api/alocacoes/finalizar/${idAlocacao}`, { data_fim }, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        await api.put(`/alocacoes/finalizar/${idAlocacao}`, { data_fim });
         alert('Alocação finalizada com sucesso!');
         fetchData();
       } catch (error) {
@@ -78,7 +64,6 @@ const PaginaAlocacoes = () => {
 
   const veiculosDisponiveis = veiculos.filter(v => v.status === 'disponivel');
 
-  // O restante do JSX continua o mesmo
   return (
     <div>
         <h2>Nova Alocação</h2>
@@ -100,7 +85,7 @@ const PaginaAlocacoes = () => {
         </form>
         <hr style={{ margin: '20px 0' }} />
         <h2>Alocações Ativas</h2>
-        <table border="1" style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <table>
             <thead>
                 <tr>
                     <th>Veículo (Placa e Modelo)</th>
@@ -114,7 +99,7 @@ const PaginaAlocacoes = () => {
                     <tr key={aloc.id}>
                         <td>{aloc.placa} - {aloc.modelo}</td>
                         <td>{aloc.vendedor_nome}</td>
-                        <td>{new Date(aloc.data_inicio).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td>
+                        <td>{new Date(aloc.data_inicio).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
                         <td>
                             <button onClick={() => handleFinalizar(aloc.id)}>Finalizar</button>
                         </td>

@@ -1,7 +1,5 @@
-// frontend/src/components/PaginaVeiculos.jsx (VERSÃO COMPLETA E FINAL)
-
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { FaPencilAlt, FaTrash } from 'react-icons/fa';
 
 const PaginaVeiculos = () => {
@@ -9,18 +7,16 @@ const PaginaVeiculos = () => {
   const [novoVeiculo, setNovoVeiculo] = useState({
     placa: '', marca: '', modelo: '', ano: '', km_atual: '',
     limite_km_mensal: '', data_inicio_contrato: '', tempo_contrato_meses: '', km_inicial_contrato: ''
-});
+  });
   
-  // Estados para o modal de edição
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [veiculoEditando, setVeiculoEditando] = useState(null);
-
-  // Estado para o modal de confirmação de exclusão
   const [idParaDeletar, setIdParaDeletar] = useState(null);
+  const [error, setError] = useState('');
 
   const fetchVeiculos = async () => {
     try {
-      const response = await axios.get('http://192.168.17.200:3001/api/veiculos');
+      const response = await api.get('/veiculos');
       setVeiculos(response.data);
     } catch (error) {
       console.error('Erro ao buscar veículos:', error);
@@ -38,18 +34,26 @@ const PaginaVeiculos = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
     try {
-      await axios.post('http://192.168.17.200:3001/api/veiculos', novoVeiculo);
-      setNovoVeiculo({ placa: '', marca: '', modelo: '', ano: '', km_atual: '', limite_km_mensal: '' });
+      await api.post('/veiculos', novoVeiculo);
+      setNovoVeiculo({ placa: '', marca: '', modelo: '', ano: '', km_atual: '', limite_km_mensal: '', data_inicio_contrato: '', tempo_contrato_meses: '', km_inicial_contrato: '' });
       fetchVeiculos();
     } catch (error) {
-      alert('Erro ao criar veículo.');
+      alert(error.response?.data?.error || 'Erro ao criar veículo.');
       console.error('Erro ao criar veículo:', error);
     }
   };
 
   const handleEdit = (veiculo) => {
-    setVeiculoEditando({ ...veiculo }); // Cria uma cópia para edição
+    const veiculoParaEditar = {
+      ...veiculo,
+      data_inicio_contrato: veiculo.data_inicio_contrato 
+        ? new Date(veiculo.data_inicio_contrato).toISOString().split('T')[0] 
+        : ''
+    };
+    setVeiculoEditando(veiculoParaEditar);
     setIsModalOpen(true);
   };
 
@@ -58,36 +62,17 @@ const PaginaVeiculos = () => {
     setVeiculoEditando(prev => ({ ...prev, [name]: value }));
   };
 
-
-const handleUpdateSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    // --- INÍCIO DA CORREÇÃO ---
-    // Criamos uma cópia dos dados para não modificar o estado diretamente
-    const dadosParaEnviar = { ...veiculoEditando };
-
-    // Verificamos se a data existe e a formatamos para o padrão AAAA-MM-DD
-    if (dadosParaEnviar.data_inicio_contrato) {
-      // O 'new Date()' garante que mesmo que a data já esteja formatada, não quebre.
-      // O '.toISOString().split('T')[0]' extrai apenas a parte 'AAAA-MM-DD'.
-      dadosParaEnviar.data_inicio_contrato = new Date(dadosParaEnviar.data_inicio_contrato).toISOString().split('T')[0];
+  const handleUpdateSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.put(`/veiculos/${veiculoEditando.id}`, veiculoEditando);
+      setIsModalOpen(false);
+      fetchVeiculos();
+    } catch (error) {
+      console.error('ERRO ao atualizar veículo:', error);
+      alert(error.response?.data?.error || 'Erro ao atualizar.');
     }
-    // --- FIM DA CORREÇÃO ---
-
-    // Agora enviamos os dados já formatados para a API
-    await axios.put(`http://192.168.17.200:3001/api/veiculos/${veiculoEditando.id}`, dadosParaEnviar);
-    
-    setIsModalOpen(false);
-    fetchVeiculos();
-  } catch (error) {
-    console.error('ERRO ao atualizar veículo:', error);
-    if (error.response) {
-      alert(`Erro da API: ${error.response.data.error || 'Erro desconhecido.'}`);
-    } else {
-      alert('Erro de rede ou de configuração ao tentar atualizar.');
-    }
-  }
-};
+  };
 
   const handleAbrirConfirmacaoDelete = (id) => {
     setIdParaDeletar(id);
@@ -96,33 +81,35 @@ const handleUpdateSubmit = async (e) => {
   const handleConfirmarDelete = async () => {
     if (!idParaDeletar) return;
     try {
-      await axios.delete(`http://192.168.17.200:3001/api/veiculos/${idParaDeletar}`);
+      await api.delete(`/veiculos/${idParaDeletar}`);
       fetchVeiculos();
     } catch (error) {
       alert(error.response?.data?.error || 'Erro ao excluir veículo.');
-      console.error('Erro ao excluir veículo:', error);
     } finally {
-      setIdParaDeletar(null); // Fecha o modal
+      setIdParaDeletar(null);
     }
   };
 
   return (
     <div>
-      
       <h2>Cadastrar Novo Veículo</h2>
+      {error && <p style={{ color: 'red', fontWeight: 'bold' }}>{error}</p>}
       <form onSubmit={handleSubmit}>
+          {/* Campos Básicos */}
           <input name="placa" value={novoVeiculo.placa} onChange={handleInputChange} placeholder="Placa" required />
           <input name="marca" value={novoVeiculo.marca} onChange={handleInputChange} placeholder="Marca" required />
           <input name="modelo" value={novoVeiculo.modelo} onChange={handleInputChange} placeholder="Modelo" required />
           <input name="ano" type="number" value={novoVeiculo.ano} onChange={handleInputChange} placeholder="Ano" required />
-          <input name="km_atual" type="number" value={novoVeiculo.km_atual} onChange={handleInputChange} placeholder="KM Atual" />
-          <input name="limite_km_mensal" type="number" value={novoVeiculo.limite_km_mensal} onChange={handleInputChange} placeholder="Limite KM Mensal" />
-      
-          {/* --- ADICIONE OS CAMPOS ABAIXO --- */}
-          <input name="data_inicio_contrato" type="date" value={novoVeiculo.data_inicio_contrato} onChange={handleInputChange} placeholder="Data de Início do Contrato" />
-          <input name="tempo_contrato_meses" type="number" value={novoVeiculo.tempo_contrato_meses} onChange={handleInputChange} placeholder="Duração do Contrato (meses)" />
-          <input name="km_inicial_contrato" type="number" value={novoVeiculo.km_inicial_contrato} onChange={handleInputChange} placeholder="KM Inicial do Contrato" />
-      
+          
+          {/* Campos de Contrato - AGORA OBRIGATÓRIOS */}
+          <input name="km_inicial_contrato" type="number" value={novoVeiculo.km_inicial_contrato} onChange={handleInputChange} placeholder="KM Inicial do Contrato" required />
+          <input name="limite_km_mensal" type="number" value={novoVeiculo.limite_km_mensal} onChange={handleInputChange} placeholder="Limite KM Mensal" required />
+          <input name="data_inicio_contrato" type="date" value={novoVeiculo.data_inicio_contrato} onChange={handleInputChange} required />
+          <input name="tempo_contrato_meses" type="number" value={novoVeiculo.tempo_contrato_meses} onChange={handleInputChange} placeholder="Duração Contrato (meses)" required />
+          
+          {/* Campo Opcional */}
+          <input name="km_atual" type="number" value={novoVeiculo.km_atual} onChange={handleInputChange} placeholder="KM Atual (opcional)" />
+
           <button type="submit">Cadastrar</button>
       </form>
 
@@ -160,15 +147,19 @@ const handleUpdateSubmit = async (e) => {
           <div className="modal-content">
             <h2>Editar Veículo</h2>
             <form onSubmit={handleUpdateSubmit}>
+                {/* Campos Básicos */}
                 <input name="placa" value={veiculoEditando.placa} onChange={handleModalChange} placeholder="Placa" required />
                 <input name="marca" value={veiculoEditando.marca} onChange={handleModalChange} placeholder="Marca" required />
                 <input name="modelo" value={veiculoEditando.modelo} onChange={handleModalChange} placeholder="Modelo" required />
                 <input name="ano" type="number" value={veiculoEditando.ano} onChange={handleModalChange} placeholder="Ano" required />
                 <input name="km_atual" type="number" value={veiculoEditando.km_atual} onChange={handleModalChange} placeholder="KM Atual" />
-                <input name="limite_km_mensal" type="number" value={veiculoEditando.limite_km_mensal || ''} onChange={handleModalChange} placeholder="Limite KM Mensal" />
-                <input name="data_inicio_contrato" type="date" value={veiculoEditando.data_inicio_contrato || ''} onChange={handleModalChange} placeholder="Data de Início do Contrato" />
-                <input name="tempo_contrato_meses" type="number" value={veiculoEditando.tempo_contrato_meses || ''} onChange={handleModalChange} placeholder="Duração do Contrato (meses)" />
-                <input name="km_inicial_contrato" type="number" value={veiculoEditando.km_inicial_contrato || ''} onChange={handleModalChange} placeholder="KM Inicial do Contrato" />
+                
+                {/* Campos de Contrato - AGORA OBRIGATÓRIOS */}
+                <input name="km_inicial_contrato" type="number" value={veiculoEditando.km_inicial_contrato || ''} onChange={handleModalChange} placeholder="KM Inicial do Contrato" required />
+                <input name="limite_km_mensal" type="number" value={veiculoEditando.limite_km_mensal || ''} onChange={handleModalChange} placeholder="Limite KM Mensal" required />
+                <input name="data_inicio_contrato" type="date" value={veiculoEditando.data_inicio_contrato || ''} onChange={handleModalChange} required />
+                <input name="tempo_contrato_meses" type="number" value={veiculoEditando.tempo_contrato_meses || ''} onChange={handleModalChange} placeholder="Duração Contrato (meses)" required />
+                
                 <select name="status" value={veiculoEditando.status} onChange={handleModalChange}>
                     <option value="disponivel">Disponível</option>
                     <option value="em_uso">Em Uso</option>
@@ -187,7 +178,7 @@ const handleUpdateSubmit = async (e) => {
         <div className="modal-overlay">
           <div className="modal-content">
             <h2>Confirmar Exclusão</h2>
-            <p>Você tem certeza que deseja excluir o veículo? Esta ação não pode ser desfeita.</p>
+            <p>Tem a certeza de que deseja excluir o veículo? Esta ação não pode ser desfeita.</p>
             <div className="modal-actions">
               <button type="button" onClick={() => setIdParaDeletar(null)}>Cancelar</button>
               <button 

@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const { proteger, protegerAdmin } = require('../middleware/authMiddleware');
 
-// ROTA GET: Listar todos os veículos (agora protegida)
+// ROTA GET: Apenas admins podem listar todos os veículos
 router.get('/', protegerAdmin, async (req, res) => {
   try {
     const [veiculos] = await db.query('SELECT * FROM veiculos ORDER BY id DESC');
@@ -13,12 +13,10 @@ router.get('/', protegerAdmin, async (req, res) => {
   }
 });
 
-// ========================================================================
-// NOVA ROTA PARA O DASHBOARD - Listar veículos alocados para o seletor
-// ========================================================================
+// ROTA GET: Rota pública para o dashboard
 router.get('/alocados', async (req, res) => {
   try {
-    const [veiculos] = await db.query(  
+    const [veiculos] = await db.query(
       "SELECT id, modelo, placa FROM veiculos WHERE status = 'em_uso' ORDER BY modelo"
     );
     res.status(200).json(veiculos);
@@ -27,9 +25,8 @@ router.get('/alocados', async (req, res) => {
     res.status(500).json({ error: "Erro interno do servidor." });
   }
 });
-// ========================================================================
 
-// ROTA POST: Criar um novo veículo (protegida)
+// ROTA POST: Apenas admins podem criar veículos
 router.post('/', protegerAdmin, async (req, res) => {
   const { placa, marca, modelo, ano, km_atual, limite_km_mensal, data_inicio_contrato, tempo_contrato_meses, km_inicial_contrato } = req.body;
   if (!placa || !marca || !modelo || !ano) {
@@ -52,7 +49,7 @@ router.post('/', protegerAdmin, async (req, res) => {
   }
 });
 
-// ROTA PUT: Atualizar um veículo (protegida)
+// ROTA PUT: Apenas admins podem atualizar veículos
 router.put('/:id', protegerAdmin, async (req, res) => {
   const { id } = req.params;
   const { placa, marca, modelo, ano, km_atual, limite_km_mensal, data_inicio_contrato, tempo_contrato_meses, km_inicial_contrato, status } = req.body;
@@ -77,12 +74,15 @@ router.put('/:id', protegerAdmin, async (req, res) => {
   }
 });
 
-// ROTA DELETE: Deletar um veículo (protegida)
+// ROTA DELETE: Apenas admins podem deletar veículos
 router.delete('/:id', protegerAdmin, async (req, res) => {
   const { id } = req.params;
   try {
-    const sql = 'DELETE FROM veiculos WHERE id = ?';
-    const [result] = await db.query(sql, [id]);
+    const [alocacoes] = await db.query('SELECT 1 FROM alocacoes WHERE id_veiculo = ? LIMIT 1', [id]);
+    if (alocacoes.length > 0) {
+        return res.status(400).json({ error: 'Não é possível excluir. Este veículo tem um histórico de alocações.' });
+    }
+    const [result] = await db.query('DELETE FROM veiculos WHERE id = ?', [id]);
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Veículo não encontrado.' });
     }
@@ -92,11 +92,12 @@ router.delete('/:id', protegerAdmin, async (req, res) => {
   }
 });
 
+// Rota para obter a última leitura de KM de um veículo
 router.get('/:id/ultima-leitura', proteger, async (req, res) => {
   const { id } = req.params; // ID do veículo
 
   try {
-    // 1. Tenta encontrar a última leitura na tabela de registros
+    // 1. Tenta encontrar a última leitura na tabela de registos
     const [leituras] = await db.query(
       `SELECT lk.km_atual
        FROM leituras_km lk
@@ -132,5 +133,5 @@ router.get('/:id/ultima-leitura', proteger, async (req, res) => {
   }
 });
 
-
 module.exports = router;
+

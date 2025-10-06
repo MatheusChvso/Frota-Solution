@@ -3,126 +3,100 @@ const pool = require('../db');
 exports.getDashboardData = async (req, res) => {
   const { veiculoId } = req.params;
   const params = veiculoId ? [veiculoId] : [];
-  const whereVeiculo = veiculoId ? `WHERE v.id = ?` : '';
-  const andAlocacaoVeiculo = veiculoId ? `AND a.id_veiculo = ?` : '';
   
   try {
-    // --- QUERY DE CONSUMO DIÁRIO CORRIGIDA ---
+    // -- Query para consumo diário (simplificada e corrigida)
     const queryConsumoHoje = `
-      WITH 
-      leituras_hoje AS (
-        SELECT
-          a.id_veiculo,
-          MAX(lk.km_atual) as max_km_hoje,
-          MIN(lk.km_atual) as min_km_hoje
+      SELECT IFNULL(SUM(consumo), 0) AS consumo_total_hoje
+      FROM (
+        SELECT 
+          (MAX(km_atual) - MIN(km_atual)) AS consumo
         FROM leituras_km lk
         JOIN alocacoes a ON lk.id_alocacao = a.id
-        WHERE lk.data_leitura >= CURRENT_DATE AND lk.data_leitura < CURRENT_DATE + INTERVAL 1 DAY ${andAlocacaoVeiculo}
+        WHERE lk.data_leitura = CURRENT_DATE
+        ${veiculoId ? `AND a.id_veiculo = ?` : ''}
         GROUP BY a.id_veiculo
-      ),
-      leitura_anterior AS (
-        SELECT
-          a.id_veiculo,
-          MAX(lk.km_atual) as max_km_anterior
+      ) AS consumo_diario;
+    `;
+
+    // -- Query para consumo mensal (simplificada e corrigida)
+    const queryConsumoMes = `
+      SELECT IFNULL(SUM(consumo), 0) AS consumo_total_mes
+      FROM (
+        SELECT 
+          (MAX(km_atual) - MIN(km_atual)) AS consumo
         FROM leituras_km lk
         JOIN alocacoes a ON lk.id_alocacao = a.id
-        WHERE lk.data_leitura < CURRENT_DATE ${andAlocacaoVeiculo}
+        WHERE YEAR(lk.data_leitura) = YEAR(CURRENT_DATE) AND MONTH(lk.data_leitura) = MONTH(CURRENT_DATE)
+        ${veiculoId ? `AND a.id_veiculo = ?` : ''}
         GROUP BY a.id_veiculo
-      )
-      SELECT
-        SUM(
-          lh.max_km_hoje - COALESCE(la.max_km_anterior, lh.min_km_hoje)
-        ) AS consumo_total_hoje
-      FROM veiculos v
-      JOIN leituras_hoje lh ON v.id = lh.id_veiculo
-      LEFT JOIN leitura_anterior la ON v.id = la.id_veiculo
-      ${whereVeiculo}
+      ) AS consumo_mensal;
     `;
     
-    // --- QUERY DE CONSUMO MENSAL CORRIGIDA ---
-    const queryConsumoMes = `
-      WITH 
-      leituras_mes_atual AS (
-        SELECT
-          a.id_veiculo,
-          MAX(lk.km_atual) as max_km_mes,
-          MIN(lk.km_atual) as min_km_mes
-        FROM leituras_km lk
-        JOIN alocacoes a ON lk.id_alocacao = a.id
-        WHERE YEAR(lk.data_leitura) = YEAR(CURRENT_DATE) AND MONTH(lk.data_leitura) = MONTH(CURRENT_DATE) ${andAlocacaoVeiculo}
-        GROUP BY a.id_veiculo
-      ),
-      leitura_mes_anterior AS (
-        SELECT
-          a.id_veiculo,
-          MAX(lk.km_atual) as max_km_anterior
-        FROM leituras_km lk
-        JOIN alocacoes a ON lk.id_alocacao = a.id
-        WHERE lk.data_leitura < DATE_FORMAT(CURRENT_DATE, '%Y-%m-01') ${andAlocacaoVeiculo}
-        GROUP BY a.id_veiculo
-      )
-      SELECT
-        SUM(
-          lma.max_km_mes - COALESCE(lan.max_km_anterior, lma.min_km_mes)
-        ) AS consumo_total_mes
-      FROM veiculos v
-      JOIN leituras_mes_atual lma ON v.id = lma.id_veiculo
-      LEFT JOIN leitura_mes_anterior lan ON v.id = lan.id_veiculo
-      ${whereVeiculo}
-    `;
+    const queryLimiteTotal = `SELECT SUM(limite_km_mensal * tempo_contrato_meses) AS meta_contrato_total FROM veiculos v ${veiculoId ? `WHERE v.id = ?` : ''};`;
 
-    const queryLimiteTotal = `SELECT SUM(limite_km_mensal * tempo_contrato_meses) AS meta_contrato_total FROM veiculos v ${whereVeiculo};`;
-
+    // --- QUERY DE SALDOS CORRIGIDA PARA SER MAIS ROBUSTA ---
+    // Agora usa INNER JOIN para garantir que apenas veículos com alocação ativa sejam exibidos
     const querySaldos = !veiculoId ? `
-      WITH leituras_recentes AS (
-        SELECT a.id_veiculo, MAX(lk.km_atual) AS km_final 
-        FROM leituras_km lk 
-        JOIN alocacoes a ON lk.id_alocacao = a.id 
-        GROUP BY a.id_veiculo
-      )
       SELECT 
         v.id, v.placa, v.modelo, vend.nome AS responsavel,
         COALESCE(TIMESTAMPDIFF(MONTH, v.data_inicio_contrato, CURDATE()) + 1, 0) AS meses_passados,
         COALESCE(v.limite_km_mensal, 0) AS limite_km_mensal,
         COALESCE(v.limite_km_mensal * (TIMESTAMPDIFF(MONTH, v.data_inicio_contrato, CURDATE()) + 1), 0) AS meta_cumulativa,
-        COALESCE(COALESCE(lr.km_final, v.km_atual) - v.km_inicial_contrato, 0) AS consumo_real_total,
-        COALESCE((v.limite_km_mensal * (TIMESTAMPDIFF(MONTH, v.data_inicio_contrato, CURDATE()) + 1)) - (COALESCE(lr.km_final, v.km_atual) - v.km_inicial_contrato), 0) AS saldo_km 
-      FROM veiculos v 
-      LEFT JOIN alocacoes a ON v.id = a.id_veiculo AND a.data_fim IS NULL 
-      LEFT JOIN vendedores vend ON a.id_vendedor = vend.id 
-      LEFT JOIN leituras_recentes lr ON v.id = lr.id_veiculo 
-      WHERE v.status = 'em_uso'
+        COALESCE(v.km_atual - v.km_inicial_contrato, 0) AS consumo_real_total,
+        COALESCE((v.limite_km_mensal * (TIMESTAMPDIFF(MONTH, v.data_inicio_contrato, CURDATE()) + 1)) - (v.km_atual - v.km_inicial_contrato), 0) AS saldo_km
+      FROM veiculos v
+      INNER JOIN alocacoes a ON v.id = a.id_veiculo AND a.data_fim IS NULL
+      LEFT JOIN vendedores vend ON a.id_vendedor = vend.id
       ORDER BY saldo_km ASC;
     ` : `SELECT 1;`;
     
-    const queryLeiturasGrafico = veiculoId ? `SELECT lk.data_leitura, lk.km_atual, COALESCE(LAG(lk.km_atual, 1) OVER (PARTITION BY a.id_veiculo ORDER BY lk.data_leitura, lk.id), v.km_inicial_contrato) AS km_anterior FROM leituras_km lk JOIN alocacoes a ON lk.id_alocacao = a.id JOIN veiculos v ON a.id_veiculo = v.id WHERE lk.data_leitura >= CURDATE() - INTERVAL 30 DAY ${andAlocacaoVeiculo} ORDER BY lk.data_leitura ASC;` : `SELECT 1;`;
+    // --- QUERY DO GRÁFICO CORRIGIDA PARA SER MAIS ROBUSTA ---
+    const queryLeiturasGrafico = veiculoId ? `
+      SELECT 
+        lk.data_leitura, 
+        lk.km_atual, 
+        -- Garante que o km_anterior nunca seja nulo, usando 0 como último recurso
+        COALESCE(
+          LAG(lk.km_atual, 1) OVER (PARTITION BY a.id_veiculo ORDER BY lk.data_leitura), 
+          v.km_inicial_contrato, 
+          0
+        ) AS km_anterior 
+      FROM leituras_km lk 
+      JOIN alocacoes a ON lk.id_alocacao = a.id 
+      JOIN veiculos v ON a.id_veiculo = v.id 
+      WHERE lk.data_leitura >= CURDATE() - INTERVAL 30 DAY AND a.id_veiculo = ? 
+      ORDER BY lk.data_leitura ASC;
+    ` : `SELECT 1;`;
+
     const queryInfoVeiculo = veiculoId ? `SELECT v.modelo, v.placa, vend.nome AS nomeVendedor FROM veiculos v JOIN alocacoes a ON v.id = a.id_veiculo JOIN vendedores vend ON a.id_vendedor = vend.id WHERE a.id_veiculo = ? AND a.data_fim IS NULL LIMIT 1;` : `SELECT 1;`;
 
-    // A desestruturação dos resultados foi tornada mais segura
-    const promises = await Promise.all([
-      pool.query(queryConsumoHoje, veiculoId ? [veiculoId, veiculoId, veiculoId] : []),
-      pool.query(queryConsumoMes, veiculoId ? [veiculoId, veiculoId, veiculoId] : []),
+    const [
+      [[resumoHoje]], [[resumoMes]], [[limiteTotal]], [saldos], [leiturasGrafico], [[infoVeiculo]]
+    ] = await Promise.all([
+      pool.query(queryConsumoHoje, params),
+      pool.query(queryConsumoMes, params),
       pool.query(queryLimiteTotal, params),
       pool.query(querySaldos),
       pool.query(queryLeiturasGrafico, params),
       pool.query(queryInfoVeiculo, params)
     ]);
-
-    const resumoHoje = promises[0][0][0];
-    const resumoMes = promises[1][0][0];
-    const limiteTotal = promises[2][0][0];
-    const saldos = promises[3][0];
-    const leiturasGrafico = promises[4][0];
-    const infoVeiculo = promises[5][0][0];
     
     const consumoPorDia = {};
-    if (veiculoId && leiturasGrafico && leiturasGrafico.length > 0) {
-      for (const leitura of leiturasGrafico) {
-        if (leitura && leitura.km_atual != null && leitura.km_anterior != null) {
-          const dia = new Date(leitura.data_leitura).toISOString().split('T')[0];
-          if (!consumoPorDia[dia]) consumoPorDia[dia] = 0;
-          const kmRodado = leitura.km_atual - leitura.km_anterior;
-          if (kmRodado > 0) consumoPorDia[dia] += kmRodado;
+    if (veiculoId && leiturasGrafico.length > 0) {
+       for (let i = 0; i < leiturasGrafico.length; i++) {
+        const leitura = leiturasGrafico[i];
+        const dia = new Date(leitura.data_leitura).toISOString().split('T')[0];
+        
+        // A lógica para determinar o KM anterior agora é mais segura
+        const kmAnterior = (i > 0) 
+            ? leiturasGrafico[i-1].km_atual 
+            : (leitura.km_anterior || 0); // Usa o valor da query, com fallback para 0
+        
+        const kmRodado = leitura.km_atual - kmAnterior;
+        
+        if (kmRodado > 0) {
+            consumoPorDia[dia] = (consumoPorDia[dia] || 0) + kmRodado;
         }
       }
     }
@@ -176,3 +150,4 @@ exports.getStatusRegistrosDiarios = async (req, res) => {
     res.status(500).json({ error: "Erro interno do servidor." });
   }
 };
+
