@@ -2,7 +2,29 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { proteger } = require('../middleware/authMiddleware');
+// Adicione a vírgula e o protegerAdmin
+const { proteger, protegerAdmin } = require('../middleware/authMiddleware');
+
+// --- NOVA ROTA PARA O ADMIN ---
+// Busca TODOS os veículos ativos e quem está com eles
+router.get('/todos-veiculos-ativos', protegerAdmin, async (req, res) => {
+    try {
+        const sql = `
+            SELECT 
+                v.id, v.placa, v.modelo, v.km_atual, a.id as id_alocacao, vend.nome as nome_condutor
+            FROM alocacoes a
+            JOIN veiculos v ON a.id_veiculo = v.id
+            JOIN vendedores vend ON a.id_vendedor = vend.id
+            WHERE a.data_fim IS NULL
+            ORDER BY vend.nome, v.modelo
+        `;
+        const [rows] = await db.query(sql);
+        res.json(rows);
+    } catch (error) {
+        console.error('ERRO na rota /todos-veiculos-ativos:', error);
+        res.status(500).json({ error: 'Erro ao buscar lista geral de veículos.' });
+    }
+});
 
 // ROTA ESPECIAL: Busca TODOS os veículos ativos do vendedor logado
 router.get('/meu-veiculo', proteger, async (req, res) => {
@@ -22,6 +44,7 @@ router.get('/meu-veiculo', proteger, async (req, res) => {
         res.status(500).json({ error: 'Erro ao buscar veículos do vendedor.' });
     }
 });
+
 
 // Rota para registrar KM (AGORA COM TRANSAÇÃO E ATUALIZAÇÃO DO VEÍCULO)
 router.post('/', proteger, async (req, res) => {
